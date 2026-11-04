@@ -38,6 +38,9 @@
   --raio-sm: 6px;
   --espaco: 8px;
 
+  /* grão fino (ruído), não pontos — mesma textura da tela Entrar, bem sutil no resto do app */
+  --grao-textura: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
+
   --suave: cubic-bezier(0.16, 1, 0.3, 1);
   --t-medio: 200ms;
   --t-lento: 360ms;
@@ -63,9 +66,21 @@ body {
     400 12px/1.45 "Poppins",
     system-ui,
     sans-serif;
-  background: #000;
+  background: #090909;
   color: var(--texto);
   -webkit-font-smoothing: antialiased;
+}
+/* grão sutil sobre tudo — login e app — pra textura ficar coerente no sistema inteiro
+   sem repetir o dither pesado da tela Entrar; some do fluxo de clique (pointer-events none) */
+body::before {
+  content: "";
+  position: fixed;
+  z-index: 999;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--grao-textura);
+  opacity: 0.04;
+  mix-blend-mode: overlay;
 }
 button,
 input,
@@ -225,11 +240,36 @@ img {
 }
 
 /* 3. Estrutura do app ------------------------------------------------------ */
+/* fundo único (login e app): a cor fica no body e a constelação num canvas fixo
+   atrás de tudo — por isso .app e .entrar não têm fundo sólido */
+.fundo-estelar {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.7;
+  transform-origin: var(--px) var(--py);
+  transition: opacity 1.4s var(--suave);
+  animation: deriva 50s ease-in-out infinite alternate;
+}
+.fundo-estelar.suave {
+  opacity: 0.3;
+}
+@keyframes deriva {
+  to {
+    transform: rotate(7deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fundo-estelar {
+    animation: none;
+  }
+}
+
 .app {
   display: flex;
   height: 100dvh;
   overflow: hidden;
-  background: var(--fundo);
 }
 .app-corpo {
   flex: 1;
@@ -361,9 +401,8 @@ img {
   right: 8px;
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: 1px;
   background: var(--destaque);
-  box-shadow: 0 0 6px var(--destaque);
 }
 .topo-menu {
   position: relative;
@@ -602,13 +641,13 @@ button:hover > .avatar {
   font-size: 10px;
   white-space: nowrap;
 }
+/* marcadores de status são pixels quadrados, sem brilho — mesma linguagem do dither */
 .etiqueta::before {
   content: "";
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: 1px;
   background: var(--cor);
-  box-shadow: 0 0 6px var(--cor);
 }
 .etiqueta button {
   display: flex;
@@ -789,10 +828,15 @@ select.entrada {
   min-height: 90px;
   display: grid;
   place-content: center;
+  justify-items: center;
+  gap: 12px;
   padding: 24px 12px;
   text-align: center;
   color: var(--texto-3);
   font-size: 12px;
+}
+.lua-pixel {
+  opacity: 0.45;
 }
 .motivo {
   padding: 10px 12px;
@@ -913,7 +957,7 @@ select.entrada {
   flex-shrink: 0;
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: 1px;
   background: var(--cor);
 }
 .legenda button b {
@@ -940,9 +984,19 @@ select.entrada {
   display: grid;
   place-items: center;
   padding-bottom: 48px;
+  overflow: hidden;
   border-radius: calc(var(--raio) - 3px);
+  background: #121212;
+}
+.brilho-dither {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0.5;
 }
 .foto-fundo b {
+  position: relative;
   font-size: clamp(40px, 5vw, 64px);
   font-weight: 300;
   letter-spacing: -1px;
@@ -1166,7 +1220,7 @@ select.entrada {
 }
 .grade-celula {
   min-height: 6px;
-  border-radius: 3px;
+  border-radius: 1px;
   background: var(--card-2);
   transition: background var(--t-medio);
 }
@@ -1178,7 +1232,6 @@ select.entrada {
 }
 .grade-celula[data-n="3"] {
   background: var(--destaque);
-  box-shadow: 0 0 10px rgba(215, 254, 250, 0.15);
 }
 .grade-rotulo {
   display: grid;
@@ -1262,9 +1315,8 @@ select.entrada {
   top: -3.5px;
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: 1px;
   background: var(--destaque);
-  box-shadow: 0 0 8px var(--destaque);
 }
 .evento {
   position: absolute;
@@ -1557,6 +1609,7 @@ select.entrada {
   overflow: hidden;
   isolation: isolate;
   background:
+    linear-gradient(180deg, rgba(7, 11, 20, 0.65), transparent 55%),
     radial-gradient(
       ellipse at 16% 70%,
       rgba(255, 255, 255, 0.045),
@@ -1566,8 +1619,7 @@ select.entrada {
       ellipse at 78% 28%,
       rgba(255, 255, 255, 0.025),
       transparent 45%
-    ),
-    #070707;
+    );
 }
 
 /* Luz ambiente discreta */
@@ -1586,47 +1638,19 @@ select.entrada {
   );
 }
 
-/* Poeira monocromática */
-
-.entrar-poeira {
-  position: absolute;
-  z-index: -1;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  transform-origin: var(--px) var(--py);
-  opacity: 0.38;
-  animation: deriva 50s ease-in-out infinite alternate;
-}
-
-.poeira-tela {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  filter: grayscale(1);
-  opacity: 0.78;
-  transform-origin: var(--px) var(--py);
-  animation: surgir 1.2s var(--suave) both;
-}
+/* Núcleo da constelação (o fundo em si é o <FundoEstelar>, seção 3) */
 
 .poeira-ponto {
   position: absolute;
   left: var(--px);
   top: var(--py);
   translate: -50% -50%;
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
+  width: 4px;
+  height: 4px;
+  border-radius: 1px;
   background: #fff;
   box-shadow: 0 0 13px rgba(255, 255, 255, 0.65);
   animation: surgir 1s var(--suave) 0.3s both;
-}
-
-@keyframes deriva {
-  to {
-    transform: rotate(7deg);
-  }
 }
 
 /* Saída e transição de portal preservadas */
@@ -1639,14 +1663,6 @@ select.entrada {
   }
 }
 
-@keyframes poeira-sai {
-  to {
-    opacity: 0;
-    transform: scale(0.08) rotate(16deg);
-    filter: blur(1px);
-  }
-}
-
 @keyframes ponto-acende {
   to {
     transform: scale(2.4);
@@ -1656,10 +1672,6 @@ select.entrada {
 
 .entrar.saindo :is(.entrar-topo, .entrar-lados, .entrar-texto, .entrar-caixa) {
   animation: login-sai 420ms ease-in forwards;
-}
-
-.entrar.saindo .poeira-tela {
-  animation: poeira-sai 560ms cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 .entrar.saindo .poeira-ponto {
@@ -2303,8 +2315,8 @@ select.entrada {
     font-size: 9px;
   }
 
-  .entrar-poeira {
-    opacity: 0.24;
+  .fundo-estelar {
+    opacity: 0.45;
   }
 }
 

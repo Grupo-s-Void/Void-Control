@@ -169,6 +169,16 @@ CSS (sem CSS-in-JS, sem Tailwind). Os principais:
 | `<GraficoAneis>` | `.graficos` / `.aneis` | anéis concêntricos interativos (hover/clique) — ver seção 8 |
 | `<Modal>` | `.fundo-modal` / `.modal` | entra com escala, sai encolhendo; ver seção 7 |
 
+### Textura dither (a "assinatura pixel")
+Funções em [`src/components/Dither.tsx`](../src/components/Dither.tsx): cada célula
+de uma grade acende ou não comparando um brilho com uma matriz de Bayer 4×4 — o
+grão de halftone das referências. Usada **grande uma vez** (a lua do login) e
+**pequena em detalhes**: `<LuaPixel>` no estado vazio (`<Vazio>`) e `<BrilhoDither>`
+no fundo da foto do motorista. Nunca como textura de fundo de card ou tabela.
+No resto da interface a linguagem aparece só como forma: marcadores de status,
+legendas e a grade de atividade são quadrados (`border-radius: 1px`), sem glow.
+Sobre tudo há um grão de ruído muito leve (`body::before`, 4% em `overlay`).
+
 **Convenção de nomenclatura:** classes e nomes de variáveis em português, no
 estilo "o que é" (`.lateral-item`, `--sobre-destaque`), não abreviações em
 inglês. Siga o mesmo padrão em qualquer componente novo.
@@ -190,25 +200,23 @@ e têm um micro-feedback de clique: `transform: scale(.98)` no `:active`.
 É a peça de identidade visual mais elaborada do sistema — vale documentar o
 mecanismo porque não é óbvio lendo o CSS isoladamente.
 
-A tela **Entrar** (`src/pages/Entrar.tsx`) mostra um vórtice de poeira — um
-componente `<Poeira>` que desenha um spiral de centenas de partículas num
-`<canvas>` **uma única vez** (não por quadro: é por isso que é leve). O núcleo
-do vórtice é ciano, a cor de destaque do sistema; a poeira mais distante vai
-esbranquiçando. É o único ponto de cor saturada na tela toda, concentrado no
-centro do vórtice — o resto é escuro/cinza, como o resto da paleta.
+O sistema inteiro tem **um fundo só**: `<FundoEstelar>` (`src/components/Fundo.tsx`),
+uma constelação em espiral com grãos de 2–4px encaixados numa grade de 4px (por isso
+"pixelizada"), mais algumas estrelas soltas. É um `<canvas>` fixo atrás de tudo,
+desenhado **uma única vez** (não por quadro: é por isso que é leve). Ele é montado
+no `App.tsx` no mesmo lugar da árvore tanto no login quanto no app, então não
+remonta ao entrar — só passa de `opacity .7` para `.3` (classe `.suave`). Por isso
+`.app` e `.entrar` não têm fundo sólido: a cor base fica no `body`.
 
 A posição do núcleo (`--px`/`--py`) é calculada por uma função pura,
-`pivo()`, a partir só de `innerWidth`/`innerHeight` — sem medir nenhum
-elemento do DOM. Isso mantém `<Poeira>` e `abrirPortal()` (chamada no submit)
-sincronizados sem precisar de ref nem de coordenação entre componentes: os
-dois chamam a mesma fórmula e chegam ao mesmo ponto.
+`pivo()` em `Fundo.tsx`, a partir só de `innerWidth`/`innerHeight` — sem medir
+nenhum elemento do DOM. O fundo, o pontinho do núcleo (`.poeira-ponto`, no login)
+e `abrirPortal()` chamam a mesma fórmula e chegam ao mesmo ponto.
 
 Ao autenticar com sucesso:
 1. **Saída do formulário** (420ms): texto e card de login se dissolvem com
-   leve blur + descida (`login-sai`); o `<canvas>` da poeira encolhe e gira
-   na direção do núcleo até sumir (`poeira-sai`, `transform-origin` no ponto);
-   o pontinho do núcleo cresce e ganha glow (`ponto-acende`) — lê como a
-   poeira sendo "sugada" pro ponto que vai abrir o sistema.
+   leve blur + descida (`login-sai`); o pontinho do núcleo cresce e ganha glow
+   (`ponto-acende`) — o ponto que vai abrir o sistema. O fundo fica e só apaga.
 2. **Portal** (900ms, logo em seguida): o `<div class="app">` entra com um
    `clip-path: circle()` animado a partir da posição exata do ponto
    (variáveis `--ox`/`--oy`, calculadas por `pivo()` no momento do submit) —

@@ -6,6 +6,7 @@ import "./styles/global.css";
 import { useEffect } from "react";
 import { BarraLateral, type ItemMenu } from "./components/BarraLateral";
 import { BarraTopo } from "./components/BarraTopo";
+import { FundoEstelar } from "./components/Fundo";
 import { pode, type Permissao } from "./lib/acesso";
 import { SISTEMA } from "./lib/config";
 import { useRota } from "./lib/rota";
@@ -33,12 +34,15 @@ export default function App() {
   // nome na aba do navegador: "Canhotos · VOID Control" (a tela Entrar define o dela)
   useEffect(() => { if (item) document.title = `${item.rotulo} · ${SISTEMA}`; }, [item]);
 
-  if (!eu || !item) return <Entrar />;
+  // o fundo fica sempre no mesmo lugar da árvore: o canvas não remonta ao entrar, só apaga
+  if (!eu || !item) return <><FundoEstelar suave={false} /><Entrar /></>;
   const atual = item.id;
-  // logo após o login, o app abre a partir do pontinho ciano (ver Entrar.tsx)
+  // logo após o login, o app abre a partir do núcleo da constelação (ver Entrar.tsx)
   const portal = document.documentElement.dataset.portal === "1";
 
   return (
+    <>
+    <FundoEstelar suave />
     <div className={`app ${portal ? "portal" : ""}`}
       onAnimationEnd={(e) => e.animationName === "portal" && delete document.documentElement.dataset.portal}>
       <BarraLateral itens={itens} atual={atual} />
@@ -56,5 +60,6 @@ export default function App() {
         </main>
       </div>
     </div>
+    </>
   );
 }

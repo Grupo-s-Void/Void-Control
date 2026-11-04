@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState, type ButtonHTMLAttributes, type CSSProperties, type ReactNode } from "react";
 import type { StatusCanhoto } from "../lib/tipos";
 import { STATUS, iniciais } from "../lib/util";
+import { BrilhoDither, LuaPixel } from "./Dither";
 import { Icone, type NomeIcone } from "./Icone";
 
 /* ---------- Card ---------- */
@@ -73,12 +74,11 @@ export function Avatar({ nome, tamanho = 32, anel = false }: { nome: string; tam
   );
 }
 
-/** "Foto" grande do motorista: iniciais sobre um fundo escuro levemente tingido com a cor dele. */
+/** "Foto" grande do motorista: iniciais sobre um brilho em dither na cor dele. */
 export function FotoMotorista({ nome, children }: { nome: string; children?: ReactNode }) {
-  const fundo = `radial-gradient(circle at 50% 30%, color-mix(in srgb, ${corDe(nome)} 22%, #222), #141414 75%)`;
   return (
     <div className="card foto">
-      <div className="foto-fundo" style={{ background: fundo }}><b>{iniciais(nome)}</b></div>
+      <div className="foto-fundo"><BrilhoDither cor={corDe(nome)} /><b>{iniciais(nome)}</b></div>
       {children && <div className="foto-faixa">{children}</div>}
     </div>
   );
@@ -183,7 +183,9 @@ export function Modal({ titulo, aoFechar, children }: {
   );
 }
 
-export const Vazio = ({ children }: { children: ReactNode }) => <p className="vazio">{children}</p>;
+export const Vazio = ({ children }: { children: ReactNode }) => (
+  <div className="vazio"><LuaPixel /><p>{children}</p></div>
+);
 
 /** Hora atual, atualizada a cada `ms` (para relógios na tela). */
 export function useAgora(ms = 1000) {

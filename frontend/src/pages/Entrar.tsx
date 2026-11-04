@@ -2,7 +2,8 @@
  * Tela de login (SIMULADO) no estilo da homepage da VOID.
  * Qualquer usuário ativo entra com o próprio e-mail + SENHA_DEMO (lib/config.ts).
  */
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
+import { pivo } from "../components/Fundo";
 import { Icone } from "../components/Icone";
 import { Avatar, Botao } from "../components/ui";
 import { NIVEIS } from "../lib/acesso";
@@ -11,16 +12,12 @@ import { acoes, useEstado } from "../lib/store";
 import { normalizar } from "../lib/util";
 
 /* ---------- Transição "portal" para o sistema ----------
- * Ao entrar: o login se dissolve, a poeira é "sugada" para o pontinho ciano (CSS .entrar.saindo);
+ * Ao entrar: o login se dissolve e o núcleo da constelação acende (CSS .entrar.saindo);
  * depois o app abre num círculo que cresce a partir desse ponto (CSS .app.portal).
- * A posição vai em --ox/--oy no <html>; data-portal avisa o App. É o mesmo ponto onde
- * o vórtice de poeira (<Poeira>) fica ancorado, calculado pela mesma fórmula nos dois lugares.
+ * A posição vai em --ox/--oy no <html>; data-portal avisa o App. O fundo
+ * (<FundoEstelar>), o núcleo e o portal usam o mesmo pivo().
  */
 const SAIDA_MS = 520;
-
-function pivo() {
-  return { x: innerWidth * 0.63, y: innerHeight * 0.32 };
-}
 
 function abrirPortal() {
   const { x, y } = pivo();
@@ -37,6 +34,7 @@ export default function Entrar() {
   const [verSenha, setVerSenha] = useState(false);
   const [erro, setErro] = useState("");
   const [entrando, setEntrando] = useState(false);
+  const [nucleo] = useState(pivo);
 
   useEffect(() => { document.title = `Entrar · ${SISTEMA}`; }, []);
 
@@ -62,7 +60,8 @@ export default function Entrar() {
 
   return (
     <main className={`entrar ${entrando ? "saindo" : ""}`}>
-      <Poeira />
+      <span className="poeira-ponto" aria-hidden="true"
+        style={{ "--px": `${nucleo.x}px`, "--py": `${nucleo.y}px` } as CSSProperties} />
 
       <header className="entrar-topo">
         <span className="logotipo">VOID</span>
@@ -120,64 +119,5 @@ export default function Entrar() {
         </form>
       </div>
     </main>
-  );
-}
-
-/* ---------- Poeira: vórtice de partículas no fundo do login ----------
- * Desenhado UMA VEZ num <canvas> (não recalculado por quadro) — por isso é leve.
- * O movimento de "deriva" e a saída (poeira sugada pro ponto) são só CSS (transform/opacity),
- * então rodam na GPU sem JS a cada frame.
- */
-const PARTICULAS_DESKTOP = 320;
-const PARTICULAS_CELULAR = 150;
-
-function Poeira() {
-  const ref = useRef<HTMLCanvasElement>(null);
-  const [{ x: px, y: py }] = useState(pivo); // fixo no mount: a deriva gira em torno de um ponto estável
-
-  useEffect(() => {
-    const canvas = ref.current!;
-    const ctx = canvas.getContext("2d")!;
-
-    function desenhar() {
-      const dpr = Math.min(devicePixelRatio || 1, 2);
-      const w = innerWidth, h = innerHeight;
-      canvas.width = w * dpr; canvas.height = h * dpr;
-      canvas.style.width = `${w}px`; canvas.style.height = `${h}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-
-      const n = w < 700 ? PARTICULAS_CELULAR : PARTICULAS_DESKTOP;
-      const raio = Math.max(w, h) * 0.62;
-      const voltas = 2.6;
-
-      for (let i = 0; i < n; i++) {
-        const t = i / n; // 0 = núcleo do vórtice, 1 = poeira solta na borda
-        const angulo = t * voltas * Math.PI * 2 + (Math.random() - 0.5) * 0.9;
-        const r = raio * t ** 0.62 * (0.85 + Math.random() * 0.3);
-        const x = px + Math.cos(angulo) * r;
-        const y = py + Math.sin(angulo) * r * 0.62; // achatado — lê como funil, não um círculo
-        const tamanho = Math.max(0.4, (1 - t) * 2.6) * (0.5 + Math.random());
-        const alfa = Math.max(0.03, (1 - t) * 0.8) * (0.5 + Math.random() * 0.7);
-        // núcleo ciano (mesma cor de destaque do sistema), poeira mais distante esbranquiçada
-        ctx.fillStyle = t < 0.35 ? `rgba(143,220,232,${alfa})` : `rgba(255,255,255,${alfa * 0.8})`;
-        ctx.beginPath();
-        ctx.arc(x, y, tamanho, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    desenhar();
-    let t: number;
-    const aoRedimensionar = () => { clearTimeout(t); t = window.setTimeout(desenhar, 150); };
-    addEventListener("resize", aoRedimensionar);
-    return () => { removeEventListener("resize", aoRedimensionar); clearTimeout(t); };
-  }, [px, py]);
-
-  return (
-    <div className="entrar-poeira" style={{ "--px": `${px}px`, "--py": `${py}px` } as CSSProperties} aria-hidden="true">
-      <canvas ref={ref} className="poeira-tela" />
-      <span className="poeira-ponto" />
-    </div>
   );
 }
