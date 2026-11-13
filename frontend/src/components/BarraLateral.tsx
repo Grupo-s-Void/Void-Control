@@ -23,14 +23,14 @@ export function BarraLateral({ itens, atual }: { itens: ItemMenu[]; atual: Tela 
             <button key={i.id} className={`lateral-item ${i.id === atual ? "ativo" : ""}`}
               title={i.rotulo} aria-label={i.rotulo} aria-current={i.id === atual ? "page" : undefined}
               onClick={() => irPara(i.id)}>
-              <Icone nome={i.icone} tamanho={16} />
+              <Icone nome={i.icone} tamanho={18} />
             </button>
           ))}
         </div>
       </div>
 
       <button className="lateral-item lateral-sair" title="Sair" aria-label="Sair" onClick={acoes.sair}>
-        <Icone nome="sair" tamanho={16} />
+        <Icone nome="sair" tamanho={18} />
       </button>
     </nav>
   );

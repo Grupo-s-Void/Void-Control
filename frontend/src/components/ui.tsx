@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState, type ButtonHTMLAttributes, type CSSProperties, type ReactNode } from "react";
 import type { StatusCanhoto } from "../lib/tipos";
 import { STATUS, iniciais } from "../lib/util";
-import { BrilhoDither, LuaPixel } from "./Dither";
+import { LuaPixel } from "./Dither";
 import { Icone, type NomeIcone } from "./Icone";
 
 /* ---------- Card ---------- */
@@ -55,7 +55,8 @@ export function Botao({ variante = "escuro", icone, className = "", children, ..
 }
 
 /* ---------- Avatar: iniciais numa cor suave, sempre a mesma para cada pessoa ---------- */
-const TONS = ["#d7fefa", "#c9e4f5", "#ece3d2", "#dcd6f5", "#f5d6d6", "#d6f0d9", "#f5ead0"];
+// só cinzas claros — no avatar viram a cor das iniciais sobre fundo cinza escuro
+const TONS = ["#e8e8e8", "#bdbdbd", "#b0b0b0", "#a3a3a3", "#d4d4d4", "#9a9a9a", "#c7c7c7"];
 
 function corDe(texto: string) {
   let h = 0;
@@ -66,7 +67,7 @@ function corDe(texto: string) {
 export function Avatar({ nome, tamanho = 32, anel = false }: { nome: string; tamanho?: number; anel?: boolean }) {
   return (
     <span className="avatar" title={nome} style={{
-      width: tamanho, height: tamanho, fontSize: tamanho * 0.36, background: corDe(nome),
+      width: tamanho, height: tamanho, fontSize: tamanho * 0.36, color: corDe(nome),
       boxShadow: anel ? "0 0 0 2px var(--fundo), 0 0 0 4px var(--destaque)" : undefined,
     }}>
       {iniciais(nome)}
@@ -78,7 +79,7 @@ export function Avatar({ nome, tamanho = 32, anel = false }: { nome: string; tam
 export function FotoMotorista({ nome, children }: { nome: string; children?: ReactNode }) {
   return (
     <div className="card foto">
-      <div className="foto-fundo"><BrilhoDither cor={corDe(nome)} /><b>{iniciais(nome)}</b></div>
+      <div className="foto-fundo"><b>{iniciais(nome)}</b></div>
       {children && <div className="foto-faixa">{children}</div>}
     </div>
   );

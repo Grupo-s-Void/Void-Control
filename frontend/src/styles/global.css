@@ -6,37 +6,60 @@
    4. Componentes          9. Responsivo
    5. Tela Início
 
+   Linguagem: app em tela cheia, áreas separadas por linhas de 1px, só preto,
+   cinza e branco (como as referências em desfoque e grão); ação primária em
+   branco. O brilho em cinza aparece num único ponto focal por tela.
+
    Regra de layout: a PÁGINA NUNCA ROLA. O app ocupa a tela inteira e só
    listas/tabelas dentro dos cards rolam (classe .rolagem).
    ========================================================================== */
 
 /* 1. Tokens ---------------------------------------------------------------- */
 :root {
-  --fundo: #0f0f0f;
-  --card: #141414;
-  --card-2: #222;
-  --card-3: #2e2e2e;
-  --linha: rgba(255, 255, 255, 0.07);
-  --borda: rgba(255, 255, 255, 0.05);
+  --pagina: #0a0a0a; /* obsidian: o chrome em volta do painel */
+  --fundo: #121212; /* painel de conteúdo */
+  --card: #171717; /* graphite */
+  --card-2: #222; /* charcoal */
+  --card-3: #2e2e2e; /* deep gray */
+  --cabeca: #1b1b1b; /* cabeçalho de tabela */
+  --linha: rgba(255, 255, 255, 0.075);
+  --borda: rgba(255, 255, 255, 0.075);
+  --borda-forte: rgba(255, 255, 255, 0.13);
 
-  --texto: #fff;
-  --texto-2: #9a9a9a;
-  --texto-3: #5f5f5f;
+  --texto: #f5f5f3; /* soft white */
+  --texto-2: #858585; /* cool gray */
+  --texto-3: #555; /* slate gray */
 
-  --destaque: #d7fefa;
-  --destaque-2: #8fdce8;
-  --sobre-destaque: #1a1d1d;
-  --sobre-destaque-2: #4a5555;
+  /* detalhes: só preto, cinza e branco */
+  --destaque: #f5f5f3; /* branco: traços, marcadores, foco, números-chave */
+  --destaque-2: #b5b5b5; /* cinza médio: segundo nível de dado */
+  --sobre-destaque: #0a0a0a;
+  --sobre-destaque-2: #4a4458;
+  --destaque-suave: rgba(255, 255, 255, 0.14);
+  --degrade: radial-gradient(
+    130% 95% at 50% 115%,
+    #f2f2f2 0%,
+    #b9b9b9 16%,
+    #6e6e6e 34%,
+    #333 56%,
+    #151515 76%,
+    #0d0d0d 92%
+  );
+
+  /* ação primária: branco */
+  --primario: #f5f5f3;
+  --sobre-primario: #0a0a0a;
 
   --ok: var(--destaque);
   --info: var(--destaque-2);
   --warn: #f3d9a4;
   --bad: #ffa3a3;
-  --bad-fundo: #3a2a2a;
+  --bad-fundo: #2a1c1c;
 
-  --raio: 10px;
-  --raio-sm: 6px;
-  --espaco: 8px;
+  --raio: 12px;
+  --raio-sm: 8px;
+  --espaco: 10px;
+  --altura-topo: 52px;
 
   /* grão fino (ruído), não pontos — mesma textura da tela Entrar, bem sutil no resto do app */
   --grao-textura: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='matrix' values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0.7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)'/%3E%3C/svg%3E");
@@ -63,15 +86,15 @@ body,
 }
 body {
   font:
-    400 12px/1.45 "Poppins",
+    400 13px/1.45 "Inter",
     system-ui,
     sans-serif;
-  background: #090909;
+  font-feature-settings: "cv11", "ss01";
+  background: var(--pagina);
   color: var(--texto);
   -webkit-font-smoothing: antialiased;
 }
-/* grão sutil sobre tudo — login e app — pra textura ficar coerente no sistema inteiro
-   sem repetir o dither pesado da tela Entrar; some do fluxo de clique (pointer-events none) */
+/* grão sutil sobre tudo — login e app; some do fluxo de clique (pointer-events none) */
 body::before {
   content: "";
   position: fixed;
@@ -79,7 +102,7 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image: var(--grao-textura);
-  opacity: 0.04;
+  opacity: 0.025;
   mix-blend-mode: overlay;
 }
 button,
@@ -107,8 +130,8 @@ img {
   max-width: 100%;
 }
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-thumb {
   background: var(--card-3);
@@ -119,7 +142,7 @@ img {
   color: var(--texto-2);
 }
 .mini {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--texto-2);
 }
 .num {
@@ -199,90 +222,42 @@ img {
   animation-delay: calc(var(--atraso, 0ms) + 125ms);
 }
 
-@keyframes portal {
+/* Entrada no sistema: o app surge com um fade suave depois do "Bem-vindo" */
+@keyframes app-entra {
   from {
-    clip-path: circle(0 at var(--ox, 50%) var(--oy, 50%));
-  }
-  to {
-    clip-path: circle(150vmax at var(--ox, 50%) var(--oy, 50%));
-  }
-}
-
-@keyframes portal-anel {
-  from {
-    width: 0;
-    height: 0;
-    opacity: 1;
-  }
-  to {
-    width: 300vmax;
-    height: 300vmax;
     opacity: 0;
   }
 }
-
-.app.portal {
-  --atraso: 380ms;
-  animation: portal 900ms cubic-bezier(0.7, 0, 0.2, 1) both;
-}
-
-.app.portal::after {
-  content: "";
-  position: fixed;
-  z-index: 100;
-  left: var(--ox, 50%);
-  top: var(--oy, 50%);
-  translate: -50% -50%;
-  border-radius: 50%;
-  border: 2px solid var(--destaque-2);
-  pointer-events: none;
-  animation: portal-anel 900ms cubic-bezier(0.7, 0, 0.2, 1) both;
+.app.abrindo {
+  --atraso: 200ms;
+  animation: app-entra 800ms var(--suave) both;
 }
 
 /* 3. Estrutura do app ------------------------------------------------------ */
-/* fundo único (login e app): a cor fica no body e a constelação num canvas fixo
-   atrás de tudo — por isso .app e .entrar não têm fundo sólido */
-.fundo-estelar {
-  position: fixed;
-  z-index: -1;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.7;
-  transform-origin: var(--px) var(--py);
-  transition: opacity 1.4s var(--suave);
-  animation: deriva 50s ease-in-out infinite alternate;
-}
-.fundo-estelar.suave {
-  opacity: 0.3;
-}
-@keyframes deriva {
-  to {
-    transform: rotate(7deg);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .fundo-estelar {
-    animation: none;
-  }
-}
-
+/* o app ocupa a tela inteira, sem moldura */
 .app {
   display: flex;
   height: 100dvh;
+  padding: 8px 8px 8px 0;
   overflow: hidden;
+  background: var(--pagina);
 }
 .app-corpo {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  background: var(--fundo);
+  border: 1px solid var(--linha);
+  border-radius: 24px;
 }
 .app-tela {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 0 14px 12px;
+  padding: 18px 20px 16px;
 }
 .tela {
   flex: 1;
@@ -292,56 +267,60 @@ img {
   animation: aparecer var(--t-medio) ease-out both;
 }
 .aviso {
-  margin: 0 14px 8px;
+  margin: 12px 20px 0;
   padding: 8px 12px;
   border-radius: var(--raio-sm);
+  border: 1px solid rgba(255, 163, 163, 0.15);
   background: var(--bad-fundo);
   color: var(--bad);
 }
 
+/* trilho preto de ícones: o painel de conteúdo fica "dentro" dele, com cantos arredondados */
 .lateral {
   flex-shrink: 0;
-  width: 66px;
-  padding: 12px 0 12px 8px;
+  width: 68px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  padding: 16px 0 14px;
+}
+.lateral-logo {
+  width: 30px;
+  height: 30px;
+  margin-bottom: 18px;
+  object-fit: contain;
 }
 .lateral-card {
-  width: 52px;
   display: flex;
   justify-content: center;
-  padding: 8px 0;
-  border-radius: var(--raio);
-  background: var(--card);
-  border: 1px solid var(--borda);
 }
 .lateral-nav {
-  --passo: 42px;
+  --passo: 50px;
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
 }
+/* a bolha clara que desliza até o item ativo */
 .lateral-indicador {
   position: absolute;
-  left: -8px;
-  top: 9px;
-  width: 3px;
-  height: 18px;
-  border-radius: 0 3px 3px 0;
-  background: var(--texto);
+  left: 0;
+  top: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--card-3);
   transform: translateY(calc(var(--i) * var(--passo)));
   transition: transform var(--t-lento) var(--suave);
 }
 .lateral-item {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--raio-sm);
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   display: grid;
   place-items: center;
-  color: var(--texto-3);
+  color: var(--texto-2);
   transition:
     color var(--t-medio),
     background var(--t-medio),
@@ -349,47 +328,65 @@ img {
 }
 .lateral-item:hover {
   color: var(--texto);
-  background: rgba(255, 255, 255, 0.05);
 }
 .lateral-item:active {
-  transform: scale(0.96);
+  transform: scale(0.94);
 }
 .lateral-item.ativo {
-  color: var(--texto);
+  color: #fff;
+}
+.lateral-sair {
+  margin-top: auto;
 }
 .logo-v {
   width: 30px;
   mix-blend-mode: screen;
   user-select: none;
 }
+.topo-logo,
+.topo-busca-botao {
+  display: none;
+}
 
 .topo {
   position: relative;
   z-index: 3;
+  flex-shrink: 0;
+  min-height: var(--altura-topo);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 340px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px) minmax(0, 1fr);
   align-items: center;
   gap: 10px;
-  padding: 8px 14px 4px;
+  padding: 0 16px 0 20px;
+  border-bottom: 1px solid var(--linha);
 }
 .topo-data {
   justify-self: start;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   line-height: 1.35;
 }
 .topo-data strong {
-  font-weight: 400;
-  font-size: 10px;
+  font-weight: 500;
+  font-size: 13px;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+}
+.topo-data strong svg {
+  color: var(--destaque);
+}
+.topo-data .mini {
+  order: 2;
+  padding-left: 10px;
+  border-left: 1px solid var(--linha);
 }
 .topo-direita {
   justify-self: end;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 .topo-sino {
   position: relative;
@@ -398,7 +395,7 @@ img {
   content: "";
   position: absolute;
   top: 7px;
-  right: 8px;
+  right: 7px;
   width: 6px;
   height: 6px;
   border-radius: 1px;
@@ -410,13 +407,17 @@ img {
 .topo-usuario {
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 2px 6px 2px 2px;
+  gap: 8px;
+  padding: 3px 8px 3px 3px;
   border-radius: var(--raio-sm);
-  transition: background var(--t-medio);
+  border: 1px solid transparent;
+  transition:
+    background var(--t-medio),
+    border-color var(--t-medio);
 }
 .topo-usuario:hover {
-  background: var(--card);
+  background: var(--card-2);
+  border-color: var(--borda);
 }
 .topo-usuario-nome {
   display: flex;
@@ -426,19 +427,22 @@ img {
 }
 .topo-usuario-nome strong {
   font-weight: 500;
-  font-size: 11px;
+  font-size: 12px;
+}
+.topo-usuario > svg {
+  color: var(--texto-2);
 }
 .menu {
   position: absolute;
   right: 0;
   top: calc(100% + 8px);
   z-index: 20;
-  min-width: 230px;
-  padding: 6px;
-  background: #1c1c1c;
-  border: 1px solid var(--linha);
-  border-radius: var(--raio-sm);
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  min-width: 240px;
+  padding: 5px;
+  background: var(--card);
+  border: 1px solid var(--borda-forte);
+  border-radius: 10px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
   transform-origin: top right;
   animation: descer var(--t-medio) var(--suave);
 }
@@ -448,12 +452,16 @@ img {
   align-items: center;
   gap: 10px;
   padding: 8px 10px;
-  border-radius: 4px;
+  border-radius: 6px;
+  color: var(--texto-2);
   text-align: left;
-  transition: background var(--t-medio);
+  transition:
+    background var(--t-medio),
+    color var(--t-medio);
 }
 .menu button:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--card-2);
+  color: var(--texto);
 }
 
 .cabecalho {
@@ -461,20 +469,20 @@ img {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
-  padding: 4px 0 8px;
+  gap: 12px;
+  padding: 0 0 16px;
 }
 .cabecalho-titulo {
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
 }
 .cabecalho-titulo h1 {
-  font-size: 14px;
+  font-size: 18px;
   font-weight: 400;
   line-height: 1.2;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 .cabecalho-titulo h1 b {
   font-weight: 600;
@@ -487,11 +495,7 @@ img {
 .cabecalho-acao {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
-}
-.cabecalho .botao:not(.botao-icone) {
-  height: 28px;
-  font-size: 10px;
+  gap: 8px;
 }
 
 /* 4. Componentes ----------------------------------------------------------- */
@@ -500,22 +504,22 @@ img {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  padding: 12px;
+  padding: 14px;
   background: var(--card);
   border: 1px solid var(--borda);
   border-radius: var(--raio);
   transition: border-color var(--t-medio);
 }
 .card:hover {
-  border-color: rgba(255, 255, 255, 0.08);
+  border-color: var(--borda-forte);
 }
 .card-topo {
   flex-shrink: 0;
-  min-height: 24px;
+  min-height: 26px;
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 6px;
+  margin-bottom: 10px;
 }
 .card-titulo {
   flex: 1;
@@ -523,23 +527,25 @@ img {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
 }
+/* "destaque" é cinza elevado com um detalhe branco, não um bloco colorido */
 .card-destaque {
-  background: var(--destaque);
-  color: var(--sobre-destaque);
+  background: var(--card-2);
+  color: var(--texto);
 }
 .card-destaque .mini,
 .card-destaque .mudo {
-  color: var(--sobre-destaque-2);
+  color: var(--texto-2);
 }
 .contador {
   padding: 1px 6px;
-  border-radius: 4px;
+  border-radius: 5px;
   background: var(--card-2);
+  border: 1px solid var(--borda);
   color: var(--texto-2);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 400;
   white-space: nowrap;
 }
@@ -552,6 +558,7 @@ img {
   justify-content: center;
   gap: 7px;
   border-radius: var(--raio-sm);
+  border: 1px solid transparent;
   font-size: 12px;
   font-weight: 500;
   white-space: nowrap;
@@ -560,9 +567,6 @@ img {
     border-color var(--t-medio),
     filter var(--t-medio),
     transform var(--t-medio) var(--suave);
-}
-.botao:hover:not(:disabled) {
-  filter: brightness(1.08);
 }
 .botao:active:not(:disabled) {
   transform: scale(0.98);
@@ -575,19 +579,27 @@ img {
 }
 .botao-escuro {
   background: var(--card-2);
+  border-color: var(--borda);
+}
+.botao-escuro:hover:not(:disabled) {
+  background: var(--card-3);
 }
 .botao-destaque {
-  background: var(--destaque);
-  color: var(--sobre-destaque);
+  background: var(--primario);
+  color: var(--sobre-primario);
+}
+.botao-destaque:hover:not(:disabled) {
+  filter: brightness(1.06);
 }
 .botao-contorno {
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-color: var(--borda-forte);
 }
 .botao-contorno:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.4);
+  background: var(--card-2);
 }
 .botao-perigo {
   background: var(--bad-fundo);
+  border-color: rgba(255, 163, 163, 0.12);
   color: var(--bad);
 }
 .botao-icone {
@@ -597,19 +609,20 @@ img {
 }
 .botao-redondo {
   flex-shrink: 0;
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   display: grid;
   place-items: center;
   border-radius: var(--raio-sm);
-  background: var(--card);
+  background: var(--card-2);
+  border: 1px solid var(--borda);
   color: inherit;
   transition:
-    filter var(--t-medio),
+    background var(--t-medio),
     transform var(--t-medio) var(--suave);
 }
 .botao-redondo:hover {
-  filter: brightness(1.25);
+  background: var(--card-3);
 }
 .botao-redondo:active {
   transform: scale(0.96);
@@ -620,7 +633,8 @@ img {
   display: grid;
   place-items: center;
   border-radius: 50%;
-  color: var(--sobre-destaque);
+  background: var(--card-3);
+  border: 1px solid var(--borda-forte);
   font-weight: 600;
   user-select: none;
   transition:
@@ -628,7 +642,7 @@ img {
     filter var(--t-medio);
 }
 button:hover > .avatar {
-  filter: brightness(1.08);
+  filter: brightness(1.15);
 }
 
 .etiqueta {
@@ -636,9 +650,11 @@ button:hover > .avatar {
   align-items: center;
   gap: 6px;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: 6px;
   background: var(--card-2);
-  font-size: 10px;
+  border: 1px solid var(--borda);
+  color: var(--texto);
+  font-size: 11px;
   white-space: nowrap;
 }
 /* marcadores de status são pixels quadrados, sem brilho — mesma linguagem do dither */
@@ -651,13 +667,19 @@ button:hover > .avatar {
 }
 .etiqueta button {
   display: flex;
+  color: var(--texto-2);
 }
 
+/* controle segmentado: trilho escuro, item ativo em cinza com borda */
 .pilulas {
   display: flex;
-  gap: 4px;
+  gap: 2px;
+  padding: 3px;
   overflow-x: auto;
   scrollbar-width: none;
+  background: var(--card);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
 }
 .pilulas::-webkit-scrollbar {
   display: none;
@@ -670,31 +692,37 @@ button:hover > .avatar {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: var(--raio-sm);
+  border-radius: 7px;
+  border: 1px solid transparent;
   color: var(--texto-2);
-  font-size: 11px;
+  font-size: 12px;
   white-space: nowrap;
   transition:
     background var(--t-medio) var(--suave),
+    border-color var(--t-medio),
     color var(--t-medio);
 }
 .pilula:hover {
   color: var(--texto);
 }
 .pilula.ativa {
-  background: var(--destaque);
-  color: var(--sobre-destaque);
+  background: var(--card-3);
+  border-color: var(--borda-forte);
+  color: var(--texto);
   font-weight: 500;
 }
 .pilula small {
   font-size: 10px;
   opacity: 0.7;
 }
+.pilula.ativa small {
+  color: var(--destaque);
+  opacity: 1;
+}
 .pilulas-linha .pilula {
   flex-direction: row;
-  gap: 5px;
-  padding: 5px 10px;
-  font-size: 10px;
+  gap: 6px;
+  padding: 4px 10px;
 }
 
 .formulario {
@@ -709,10 +737,10 @@ button:hover > .avatar {
 .campo {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
 }
 .campo > span {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--texto-2);
 }
 .entrada {
@@ -721,12 +749,18 @@ button:hover > .avatar {
   padding: 0 12px;
   border-radius: var(--raio-sm);
   outline: none;
-  background: var(--card-2);
-  border: 1px solid transparent;
-  transition: border-color var(--t-medio);
+  background: var(--fundo);
+  border: 1px solid var(--borda-forte);
+  transition:
+    border-color var(--t-medio),
+    box-shadow var(--t-medio);
+}
+.entrada::placeholder {
+  color: var(--texto-3);
 }
 .entrada:focus {
-  border-color: rgba(255, 255, 255, 0.2);
+  border-color: color-mix(in srgb, var(--destaque) 45%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--destaque) 8%, transparent);
 }
 select.entrada {
   appearance: none;
@@ -756,14 +790,14 @@ select.entrada {
 }
 .busca {
   position: relative;
-  width: min(420px, 100%);
+  width: 100%;
 }
 .busca .entrada {
-  height: 30px;
+  height: 32px;
   padding: 0 34px;
   background: var(--card);
-  border-color: var(--linha);
-  font-size: 10px;
+  border-color: var(--borda);
+  font-size: 12px;
 }
 .busca-icone {
   position: absolute;
@@ -812,11 +846,11 @@ select.entrada {
     background var(--t-medio);
 }
 .interruptor input:checked {
-  background: var(--destaque);
+  background: var(--destaque-2);
 }
 .interruptor input:checked::after {
   transform: translateX(14px);
-  background: var(--sobre-destaque);
+  background: #fff;
 }
 .interruptor input:disabled {
   opacity: 0.4;
@@ -841,6 +875,7 @@ select.entrada {
 .motivo {
   padding: 10px 12px;
   border-radius: var(--raio-sm);
+  border: 1px solid rgba(255, 163, 163, 0.12);
   background: var(--bad-fundo);
   color: var(--bad);
   font-size: 12px;
@@ -853,7 +888,7 @@ select.entrada {
   display: grid;
   place-items: center;
   padding: 16px;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.72);
   animation: aparecer var(--t-medio) ease-out;
 }
 .fundo-modal.fechando {
@@ -866,6 +901,9 @@ select.entrada {
   width: min(460px, 100%);
   max-height: calc(100dvh - 32px);
   overflow: auto;
+  padding: 18px;
+  border-color: var(--borda-forte);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
   animation: surgir var(--t-lento) var(--suave);
 }
 
@@ -888,6 +926,11 @@ select.entrada {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+}
+.grafico .espacado {
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .aneis {
   position: relative;
@@ -930,7 +973,7 @@ select.entrada {
 }
 .aneis-centro strong {
   font-size: 18px;
-  font-weight: 400;
+  font-weight: 500;
 }
 .legenda {
   flex-shrink: 0;
@@ -943,9 +986,9 @@ select.entrada {
   align-items: center;
   gap: 6px;
   padding: 3px 6px;
-  border-radius: 4px;
+  border-radius: 5px;
   color: var(--texto-2);
-  font-size: 10px;
+  font-size: 11px;
   text-align: left;
   transition:
     background var(--t-medio),
@@ -976,7 +1019,6 @@ select.entrada {
   min-height: 150px;
   padding: 0;
   overflow: hidden;
-  border: 3px solid var(--card);
 }
 .foto-fundo {
   position: absolute;
@@ -985,15 +1027,7 @@ select.entrada {
   place-items: center;
   padding-bottom: 48px;
   overflow: hidden;
-  border-radius: calc(var(--raio) - 3px);
-  background: #121212;
-}
-.brilho-dither {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.5;
+  background: #0d0d0d;
 }
 .foto-fundo b {
   position: relative;
@@ -1012,7 +1046,9 @@ select.entrada {
   gap: 6px;
   padding: 8px 8px 8px 12px;
   border-radius: var(--raio-sm);
-  background: rgba(10, 10, 10, 0.78);
+  background: rgba(11, 11, 11, 0.82);
+  border: 1px solid var(--borda);
+  backdrop-filter: blur(8px);
 }
 .foto-faixa > div {
   flex: 1;
@@ -1020,16 +1056,16 @@ select.entrada {
   line-height: 1.25;
 }
 .foto-faixa strong {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
 }
 .foto-faixa .botao-redondo {
   width: 28px;
   height: 28px;
-  background: var(--card-2);
 }
 .foto-faixa .botao-destaque {
-  background: var(--destaque);
+  background: var(--primario);
+  border-color: transparent;
   color: var(--sobre-destaque);
 }
 
@@ -1085,8 +1121,8 @@ select.entrada {
   border-radius: 50%;
 }
 .seta-faixa {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
 }
 
 .relogio {
@@ -1094,9 +1130,10 @@ select.entrada {
   display: flex;
   align-items: center;
   gap: 10px;
-  margin-bottom: 6px;
-  padding: 8px 8px 8px 12px;
+  margin-bottom: 8px;
+  padding: 10px 10px 10px 12px;
   border-radius: var(--raio-sm);
+  border: 1px solid var(--borda);
 }
 .relogio > div {
   flex: 1;
@@ -1104,13 +1141,10 @@ select.entrada {
 }
 .relogio strong {
   display: block;
+  color: var(--destaque);
   font-size: 22px;
   font-weight: 400;
   letter-spacing: 0.5px;
-}
-.relogio .botao-redondo {
-  background: var(--sobre-destaque);
-  color: var(--texto);
 }
 .tarefa {
   width: 100%;
@@ -1119,7 +1153,6 @@ select.entrada {
   gap: 10px;
   padding: 8px 4px;
   border-top: 1px solid var(--linha);
-  border-radius: var(--raio-sm);
   text-align: left;
   transition: background var(--t-medio);
 }
@@ -1127,7 +1160,7 @@ select.entrada {
   border-top-color: transparent;
 }
 .tarefa:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.025);
 }
 .tarefa-icone {
   flex-shrink: 0;
@@ -1137,6 +1170,7 @@ select.entrada {
   place-items: center;
   border-radius: var(--raio-sm);
   background: var(--card-2);
+  border: 1px solid var(--borda);
   color: var(--texto-2);
 }
 .tarefa > div {
@@ -1144,7 +1178,7 @@ select.entrada {
   line-height: 1.3;
 }
 .tarefa strong {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 
@@ -1170,8 +1204,9 @@ select.entrada {
 }
 .numero strong {
   font-size: clamp(20px, 2vw, 26px);
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 .banner {
   flex: 1;
@@ -1179,10 +1214,52 @@ select.entrada {
   justify-content: space-between;
   gap: 10px;
   text-align: left;
-  transition: filter var(--t-medio);
+  /* o ponto focal da tela: o degradê cinza subindo de baixo, com grão fino por cima */
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--degrade);
+  border-color: var(--destaque-suave);
+  transition:
+    border-color var(--t-medio),
+    filter var(--t-lento) var(--suave);
+}
+.banner::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--grao-textura);
+  opacity: 0.14;
+  mix-blend-mode: overlay;
+}
+.banner > :not(.fluido-card) {
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.6);
+  pointer-events: none; /* o mouse chega no fluido; o clique sobe para o botão */
+}
+/* fluido da marca no card: preenche tudo, atrás do texto */
+.banner .banner-fluido {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  border: 0;
+  cursor: pointer;
+  touch-action: auto;
+}
+.banner .banner-fluido::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.5), transparent 62%);
 }
 .banner:hover {
-  filter: brightness(0.96);
+  border-color: color-mix(in srgb, var(--destaque) 50%, transparent);
+  filter: brightness(1.08) saturate(1.05);
+}
+.banner .mini {
+  color: rgba(255, 255, 255, 0.78);
 }
 .banner-topo {
   display: flex;
@@ -1190,23 +1267,25 @@ select.entrada {
   align-items: center;
 }
 .banner-topo img {
-  width: 30px;
-  filter: invert(1);
-  mix-blend-mode: multiply;
+  width: 28px;
+  mix-blend-mode: screen;
 }
 .banner-topo span {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 6px 4px 10px;
-  border-radius: var(--raio-sm);
-  background: var(--sobre-destaque);
+  padding: 3px 6px 3px 10px;
+  border-radius: 6px;
+  background: rgba(11, 11, 11, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   color: var(--texto);
   font-size: 11px;
+  text-shadow: none;
+  backdrop-filter: blur(6px);
 }
 .banner h3 {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.2;
 }
 
@@ -1236,7 +1315,7 @@ select.entrada {
 .grade-rotulo {
   display: grid;
   place-items: center;
-  font-size: 9px;
+  font-size: 10px;
   color: var(--texto-3);
 }
 .grade-legenda {
@@ -1244,7 +1323,7 @@ select.entrada {
   display: flex;
   gap: 12px;
   margin-bottom: 10px;
-  font-size: 10px;
+  font-size: 11px;
   color: var(--texto-2);
 }
 .grade-legenda span {
@@ -1258,101 +1337,103 @@ select.entrada {
   min-height: 0;
 }
 
-.agenda-dias {
-  flex-shrink: 0;
+/* Gráfico de envios (Início) */
+.envios-titulo {
   display: flex;
-  justify-content: space-around;
-  margin-bottom: 6px;
-  padding-left: 48px;
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1.2;
 }
-.agenda-aviso {
-  flex-shrink: 0;
-  margin-bottom: 6px;
-  text-align: center;
-}
-.agenda-corpo {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  padding-top: 8px;
-  scroll-behavior: smooth;
-}
-.agenda-hora {
-  height: 46px;
-  display: flex;
-  gap: 12px;
-  font-size: 10px;
-  color: var(--texto-3);
-}
-.agenda-hora span {
-  width: 36px;
-  transform: translateY(-6px);
-}
-.agenda-hora::after {
-  content: "";
-  flex: 1;
-  border-top: 1px dashed var(--linha);
-}
-.agenda-eventos {
-  position: absolute;
-  left: 48px;
-  right: 0;
-  top: 8px;
-  bottom: 0;
-}
-.agenda-agora {
-  position: absolute;
-  left: 0;
-  right: 0;
-  border-top: 1px solid var(--destaque);
-  opacity: 0.6;
-}
-.agenda-agora::before {
-  content: "";
-  position: absolute;
-  left: -3px;
-  top: -3.5px;
-  width: 6px;
-  height: 6px;
-  border-radius: 1px;
-  background: var(--destaque);
-}
-.evento {
-  position: absolute;
-  width: 31%;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 8px;
-  border-radius: var(--raio-sm);
-  background: var(--card-2);
-  text-align: left;
-  line-height: 1.25;
-  transition: filter var(--t-medio);
-}
-.evento:hover {
-  z-index: 2;
-  filter: brightness(1.15);
-}
-.evento > div {
-  flex: 1;
-  min-width: 0;
-}
-.evento strong {
-  display: block;
-  font-size: 10px;
-  font-weight: 500;
-}
-.evento small {
-  font-size: 9px;
+.envios-titulo small {
+  font-size: 11px;
+  font-weight: 400;
   color: var(--texto-2);
 }
-.evento.card-destaque {
-  background: var(--destaque);
+.envios-periodos {
+  display: flex;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio-sm);
+  overflow: hidden;
 }
-.evento.card-destaque small {
-  color: var(--sobre-destaque-2);
+.envios-periodos button {
+  padding: 5px 10px;
+  font-size: 11px;
+  color: var(--texto-2);
+  background: transparent;
+  transition:
+    background var(--t-medio),
+    color var(--t-medio);
+}
+.envios-periodos button + button {
+  border-left: 1px solid var(--borda-forte);
+}
+.envios-periodos button:hover {
+  color: var(--texto);
+}
+.envios-periodos button[aria-pressed="true"] {
+  background: var(--card-3);
+  color: var(--texto);
+}
+.envios-area {
+  position: relative;
+  flex: 1;
+  min-height: 140px;
+  cursor: crosshair;
+  touch-action: pan-y;
+}
+.envios-area svg {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+.envios-grade {
+  stroke: var(--linha);
+}
+.envios-linha {
+  fill: none;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.envios-guia {
+  stroke: rgba(255, 255, 255, 0.3);
+  stroke-dasharray: 3 3;
+}
+.envios-rotulo {
+  fill: var(--texto-3);
+  font-size: 10px;
+}
+.envios-dica {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 120px;
+  padding: 8px 10px;
+  border-radius: var(--raio-sm);
+  background: rgba(10, 10, 10, 0.88);
+  border: 1px solid var(--borda-forte);
+  backdrop-filter: blur(10px);
+  font-size: 11px;
+  pointer-events: none;
+}
+.envios-dica span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--texto-2);
+}
+.envios-dica b {
+  margin-left: auto;
+  padding-left: 12px;
+  color: var(--texto);
+  font-weight: 500;
+}
+.envios-dica i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
 }
 
 .lista-item {
@@ -1360,14 +1441,20 @@ select.entrada {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px;
+  padding: 7px 8px;
   border-radius: var(--raio-sm);
+  border: 1px solid transparent;
   text-align: left;
-  transition: background var(--t-medio);
+  transition:
+    background var(--t-medio),
+    border-color var(--t-medio);
 }
-.lista-item:hover,
+.lista-item:hover {
+  background: var(--card-2);
+}
 .lista-item.ativo {
   background: var(--card-2);
+  border-color: var(--borda);
 }
 .lista-item > div {
   flex: 1;
@@ -1375,7 +1462,7 @@ select.entrada {
   line-height: 1.3;
 }
 .lista-item strong {
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
 }
 .lista-item.sem-sinal {
@@ -1390,6 +1477,14 @@ select.entrada {
   grid-template-columns: minmax(0, 1fr) 380px;
   gap: var(--espaco);
 }
+/* card que só tem tabela: sem respiro, a tabela encosta na borda (como uma planilha) */
+.card:has(> .rolagem > .tabela) {
+  padding: 0;
+  overflow: hidden;
+}
+.card:has(> .rolagem > .tabela) .filtro-motorista {
+  margin: 12px 12px 0;
+}
 .tabela {
   width: 100%;
   border-collapse: separate;
@@ -1399,19 +1494,19 @@ select.entrada {
   position: sticky;
   top: 0;
   z-index: 1;
-  padding: 0 10px 10px;
-  background: var(--card);
-  color: var(--texto-3);
-  font-size: 10px;
-  font-weight: 500;
+  padding: 11px 16px;
+  background: var(--cabeca);
+  border-bottom: 1px solid var(--linha);
+  color: var(--texto-2);
+  font-size: 12px;
+  font-weight: 400;
   text-align: left;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
+  white-space: nowrap;
 }
 .tabela td {
-  padding: 9px 10px;
-  border-top: 1px solid var(--linha);
-  font-size: 11px;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--linha);
+  font-size: 12.5px;
   white-space: nowrap;
   transition: background var(--t-medio);
 }
@@ -1422,20 +1517,13 @@ select.entrada {
   cursor: pointer;
 }
 .tabela tbody tr:hover td {
-  background: rgba(255, 255, 255, 0.03);
-}
-.tabela tbody tr.ativa td,
-.tabela tbody tr.ativa + tr td {
-  border-top-color: transparent;
+  background: rgba(255, 255, 255, 0.025);
 }
 .tabela tbody tr.ativa td {
   background: var(--card-2);
 }
-.tabela td:first-child {
-  border-radius: var(--raio-sm) 0 0 var(--raio-sm);
-}
-.tabela td:last-child {
-  border-radius: 0 var(--raio-sm) var(--raio-sm) 0;
+.tabela tbody tr.ativa td:first-child {
+  box-shadow: inset 2px 0 0 var(--destaque);
 }
 .tabela .direita {
   text-align: right;
@@ -1457,7 +1545,7 @@ select.entrada {
 }
 
 .detalhe {
-  gap: 12px;
+  gap: 14px;
   overflow: auto;
   animation: aparecer var(--t-medio) ease-out;
 }
@@ -1472,6 +1560,7 @@ select.entrada {
   overflow: hidden;
   border-radius: var(--raio-sm);
   background: var(--card-2);
+  border: 1px solid var(--borda);
   color: var(--texto-3);
   text-align: center;
 }
@@ -1482,23 +1571,42 @@ select.entrada {
   height: 100%;
   object-fit: cover;
 }
+/* dados como linhas de tabela: rótulo à esquerda, valor à direita, linha fina entre eles */
 .dados {
   display: grid;
   grid-template-columns: auto 1fr;
-  gap: 8px 16px;
-  font-size: 12px;
+  font-size: 12.5px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+  overflow: hidden;
+}
+.dados dt,
+.dados dd {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-top: 1px solid var(--linha);
+}
+.dados dt:first-of-type,
+.dados dd:first-of-type {
+  border-top: 0;
 }
 .dados dt {
   color: var(--texto-2);
+  background: var(--cabeca);
 }
 .dados dd {
   min-width: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0 6px;
   overflow: hidden;
   text-overflow: ellipsis;
   text-align: right;
 }
 .dados .entrada {
-  height: 30px;
+  height: 28px;
   font-size: 12px;
   text-align: right;
 }
@@ -1518,7 +1626,7 @@ select.entrada {
   cursor: pointer;
   text-align: center;
   color: var(--texto-2);
-  border: 1px dashed rgba(255, 255, 255, 0.14);
+  border: 1px dashed var(--borda-forte);
   border-radius: var(--raio-sm);
   transition:
     border-color var(--t-medio),
@@ -1544,14 +1652,21 @@ select.entrada {
 
 .permissoes {
   display: grid;
-  gap: 2px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-sm);
+  overflow: hidden;
 }
 .permissoes .interruptor {
   align-items: flex-start;
+  padding: 10px 12px;
+  border-top: 1px solid var(--linha);
   line-height: 1.3;
 }
+.permissoes .interruptor:first-child {
+  border-top: 0;
+}
 .subtitulo {
-  margin: 6px 0;
+  margin: 6px 0 8px;
 }
 
 /* 7. Tela Motoristas ------------------------------------------------------- */
@@ -1564,7 +1679,7 @@ select.entrada {
   align-content: start;
 }
 .motorista {
-  gap: 10px;
+  gap: 12px;
 }
 .motorista .foto {
   flex: 1;
@@ -1586,426 +1701,566 @@ select.entrada {
   grid-template-columns: 1fr 1fr auto;
   align-items: center;
   gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--linha);
 }
 .motorista-numeros strong {
   display: block;
   font-size: 20px;
-  font-weight: 300;
+  font-weight: 400;
   line-height: 1.2;
 }
 
-/* 8. Tela Entrar — identidade visual VOID WebPage ------------------------- */
+/* 8. Tela Entrar ----------------------------------------------------------
+   Preto com luz branca desfocada ao fundo e grão fino, como as referências;
+   card de vidro escuro no centro; frase "focus on void" no canto inferior
+   direito, com rastro de movimento. Sem cor, sem moldura, sem pontos. */
 
 .entrar {
-  --login-branco: #f1f1f1;
-  --login-cinza: #a0a0a0;
-  --login-dim: #656565;
-  --login-linha: rgba(255, 255, 255, 0.1);
   position: relative;
   display: flex;
   flex-direction: column;
+  align-items: center;
   width: 100%;
   height: 100dvh;
   overflow: hidden;
   isolation: isolate;
-  background:
-    linear-gradient(180deg, rgba(7, 11, 20, 0.65), transparent 55%),
-    radial-gradient(
-      ellipse at 16% 70%,
-      rgba(255, 255, 255, 0.045),
-      transparent 42%
-    ),
-    radial-gradient(
-      ellipse at 78% 28%,
-      rgba(255, 255, 255, 0.025),
-      transparent 45%
-    );
+  background: #0a0a0a;
 }
 
-/* Luz ambiente discreta */
-
-.entrar::before {
+/* luz desfocada atrás do card */
+.brilho {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.brilho i {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  animation: brilho-deriva 24s ease-in-out infinite alternate;
+}
+.brilho i:nth-child(1) {
+  left: 50%;
+  bottom: -34vmax;
+  width: 90vmax;
+  height: 60vmax;
+  translate: -50% 0;
+  background: radial-gradient(closest-side, #f4f4f4 0%, #9d9d9d 38%, #2c2c2c 72%, transparent);
+  opacity: 0.9;
+}
+.brilho i:nth-child(2) {
+  left: 4%;
+  top: -16vmax;
+  width: 44vmax;
+  height: 30vmax;
+  background: radial-gradient(closest-side, #8a8a8a, transparent);
+  opacity: 0.28;
+  animation-delay: -8s;
+}
+@keyframes brilho-deriva {
+  to {
+    transform: translate(4vmax, -3vmax) scale(1.08);
+  }
+}
+/* grão fino por cima da luz */
+.entrar::after {
   content: "";
   position: absolute;
   z-index: -1;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(
-    110deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.012) 48%,
-    transparent 75%
-  );
+  background-image: var(--grao-textura);
+  opacity: 0.16;
+  mix-blend-mode: overlay;
 }
 
-/* Núcleo da constelação (o fundo em si é o <FundoEstelar>, seção 3) */
-
-.poeira-ponto {
-  position: absolute;
-  left: var(--px);
-  top: var(--py);
-  translate: -50% -50%;
-  width: 4px;
-  height: 4px;
-  border-radius: 1px;
-  background: #fff;
-  box-shadow: 0 0 13px rgba(255, 255, 255, 0.65);
-  animation: surgir 1s var(--suave) 0.3s both;
-}
-
-/* Saída e transição de portal preservadas */
-
+/* Saída: o card se fecha, a luz do fundo brilha e se expande, mostra "Bem-vindo, Fulano",
+   e então some para dar lugar ao app (ver Entrar.tsx). */
 @keyframes login-sai {
   to {
     opacity: 0;
-    transform: translateY(10px) scale(0.98);
-    filter: blur(4px);
+    transform: scale(0.94);
+    filter: blur(6px);
   }
 }
-
-@keyframes ponto-acende {
+@keyframes brilho-acende {
   to {
-    transform: scale(2.4);
-    box-shadow: 0 0 40px 12px rgba(255, 255, 255, 0.65);
+    filter: brightness(2.2);
+    transform: scale(1.2);
   }
 }
-
-.entrar.saindo :is(.entrar-topo, .entrar-lados, .entrar-texto, .entrar-caixa) {
-  animation: login-sai 420ms ease-in forwards;
+@keyframes luz-expande {
+  from {
+    opacity: 0;
+    scale: 0.08;
+  }
+  to {
+    opacity: 1;
+    scale: 2.8;
+  }
+}
+@keyframes bv-surge {
+  from {
+    opacity: 0;
+    translate: 0 14px;
+    filter: blur(12px);
+  }
+  to {
+    opacity: 1;
+  }
+}
+.entrar.saindo :is(.entrar-palco, .entrar-focus) {
+  animation: login-sai 520ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
+  pointer-events: none;
+}
+.entrar.saindo .brilho {
+  animation: brilho-acende 1400ms var(--suave) forwards;
+}
+.entrar-luz {
+  position: absolute;
+  z-index: 0;
+  left: 50%;
+  top: 50%;
+  width: 60vmax;
+  height: 60vmax;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, #fff 0%, rgba(246, 245, 240, 0.9) 34%, rgba(190, 190, 188, 0.35) 66%, transparent);
+  filter: blur(28px);
+  opacity: 0;
+  pointer-events: none;
+}
+.entrar.saindo .entrar-luz {
+  animation: luz-expande 1300ms cubic-bezier(0.2, 0.7, 0.2, 1) 250ms forwards;
+}
+.entrar-bv {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  text-align: center;
+  color: #fff;
+  mix-blend-mode: difference; /* branco sobre o escuro, escuro sobre a luz */
+  opacity: 0;
+  pointer-events: none;
+  animation: bv-surge 900ms var(--suave) 650ms forwards;
+}
+.entrar-bv small {
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  opacity: 0.8;
+}
+.entrar-bv strong {
+  font-size: clamp(40px, 7vw, 84px);
+  font-weight: 600;
+  line-height: 1.05;
+  letter-spacing: -0.045em;
+}
+.entrar {
+  transition: opacity 450ms ease-in;
+}
+.entrar.fim {
+  opacity: 0;
 }
 
-.entrar.saindo .poeira-ponto {
-  animation: ponto-acende 520ms var(--suave) forwards;
-}
-
-/* Cabeçalho */
-
-.entrar-topo,
-.entrar-lados,
-.entrar-corpo {
-  position: relative;
-  z-index: 1;
-}
-
+/* Topo: logo redondo à esquerda, pílula à direita */
 .entrar-topo {
   display: flex;
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 27px clamp(28px, 6vw, 100px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+  max-width: 1200px;
+  padding: 24px clamp(16px, 5vw, 56px);
   animation: aparecer 0.6s ease both;
 }
-
-.logotipo {
-  color: #f4f4f4;
-  font-size: 17px;
-  font-weight: 400;
-  letter-spacing: 0.48em;
-  text-shadow: 0 0 28px rgba(255, 255, 255, 0.13);
-}
-
-.entrar-topo .espacado {
-  color: #929292;
-  font-size: 9px;
-  letter-spacing: 0.25em;
-}
-
-/* Indicadores laterais */
-
-.entrar-lados {
-  position: absolute;
-  top: 50%;
-  right: clamp(28px, 6vw, 100px);
-  display: grid;
-  gap: 12px;
-  padding-left: 15px;
-  border-left: 1px solid rgba(255, 255, 255, 0.14);
-  transform: translateY(-50%);
-  opacity: 0.55;
-  animation: aparecer 0.7s ease 0.2s both;
-}
-
-.entrar-lados span {
-  color: #a1a1a1;
-  font-size: 8px;
-  letter-spacing: 0.2em;
-}
-
-/* Composição principal */
-
-.entrar-corpo {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 420px);
+.entrar-marca {
+  display: flex;
   align-items: center;
-  gap: clamp(45px, 8vw, 120px);
-  width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 30px clamp(28px, 6vw, 100px) 45px;
-}
-
-.entrar-corpo > * {
-  align-self: center;
-}
-
-/* Apresentação */
-
-.entrar-texto {
-  max-width: 690px;
-  animation: surgir 0.75s var(--suave) 0.1s both;
-}
-
-.entrar-texto::before {
-  content: "GESTÃO OPERACIONAL / VOID CONTROL";
-  display: block;
-  margin-bottom: 24px;
-  color: #8d8d8d;
-  font-size: 9px;
-  font-weight: 500;
-  letter-spacing: 0.24em;
-}
-
-.entrar-texto h1 {
-  color: #f1f1f1;
-  font-size: clamp(38px, 4.2vw, 58px);
-  font-weight: 300;
-  line-height: 1.08;
-  letter-spacing: -0.055em;
-}
-
-.entrar-texto h1 b {
-  color: #fff;
+  gap: 10px;
+  color: var(--texto);
+  font-size: 13px;
   font-weight: 500;
 }
-
-.entrar-texto p {
-  max-width: 390px;
-  margin-top: 18px;
-  color: #949494;
-  font-size: 12px;
-  font-weight: 300;
-  line-height: 1.75;
+.entrar-logo {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
 }
-
-/* Formulário */
-
-.entrar-caixa {
-  position: relative;
-  width: 100%;
-  max-height: 100%;
-  overflow: auto;
-  gap: 19px;
-  padding: clamp(24px, 3vw, 34px);
-  background: rgba(17, 17, 17, 0.82);
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 12px;
-  box-shadow:
-    0 25px 80px rgba(0, 0, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.025);
-  backdrop-filter: blur(22px);
-  animation: surgir 0.75s var(--suave) 0.2s both;
-  transition:
-    border-color 350ms var(--suave),
-    box-shadow 350ms var(--suave),
-    background 350ms var(--suave);
+.entrar-logo img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
 }
-
-.entrar-caixa:hover {
-  border-color: rgba(255, 255, 255, 0.14);
-  box-shadow:
-    0 30px 90px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.035);
-}
-
-.entrar-caixa > div:first-child {
-  margin-bottom: 2px;
-}
-
-.entrar-caixa h2 {
-  color: #f1f1f1;
-  font-size: 19px;
-  font-weight: 400;
-  letter-spacing: -0.025em;
-}
-
-.entrar-caixa > div:first-child .mini {
-  margin-top: 6px;
-  color: #888;
-  font-size: 11px;
-}
-
-/* Campos do login */
-
-.entrar-caixa .campo {
+.entrar-pilula {
+  display: flex;
+  align-items: center;
   gap: 8px;
-}
-
-.entrar-caixa .campo > span:first-child {
-  color: #aaa;
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.025em;
-}
-
-.entrar-caixa .entrada {
-  height: 43px;
-  padding: 0 13px;
-  color: #f1f1f1;
-  background: rgba(255, 255, 255, 0.045);
-  border: 1px solid rgba(255, 255, 255, 0.075);
-  border-radius: 6px;
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(12px);
+  color: var(--texto);
   font-size: 11px;
+  font-weight: 500;
+}
+.entrar-pilula i {
+  width: 6px;
+  height: 6px;
+  border-radius: 2px;
+  background: #f2f2f2;
+}
+
+/* Card único dividido ao meio: formulário à esquerda, fluido interativo à direita */
+.entrar-palco {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: none;
+  width: min(940px, calc(100% - 32px));
+  height: min(600px, calc(100dvh - 120px));
+  margin: auto 0;
+  overflow: hidden;
+  border-radius: 24px;
+  background: rgba(10, 10, 10, 0.62);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  animation: surgir 0.75s var(--suave) 0.2s both;
+}
+.entrar-caixa {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  min-width: 0;
+  padding: 28px clamp(20px, 3.4vw, 44px);
+  overflow: auto;
+  scrollbar-width: none;
+}
+.fluido-card {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  background: radial-gradient(120% 80% at 30% 80%, #bdbdbd, #0a0a0a 70%);
+  cursor: crosshair;
+  touch-action: none;
+}
+.fluido-logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: clamp(54px, 7vw, 84px);
+  translate: -50% -50%;
+  opacity: 0.92;
+  mix-blend-mode: difference;
+  pointer-events: none;
+  user-select: none;
+}
+.fluido-card canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.fluido-card.sem-gl canvas {
+  display: none;
+}
+@media (max-width: 860px) {
+  .entrar-palco {
+    grid-template-columns: 1fr;
+    width: min(420px, calc(100% - 32px));
+  }
+  .fluido-card {
+    display: none;
+  }
+}
+
+.entrar-cabeca {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  color: var(--texto-2);
+}
+.entrar-cabeca h1 {
+  color: #f4f4f4;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+/* Campos: rótulo em cima, caixa escura com ícone */
+.entrar-campo {
+  display: grid;
+  gap: 7px;
+}
+.entrar-rotulo {
+  display: flex;
+  justify-content: space-between;
+  color: #cfcfcf;
+  font-size: 12px;
+}
+.entrar-rotulo small {
+  color: var(--texto-3);
+  font-size: 11px;
+}
+.entrar-caixinha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 46px;
+  padding: 0 6px 0 14px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: var(--texto-2);
   transition:
     border-color 250ms var(--suave),
-    background 250ms var(--suave),
     box-shadow 250ms var(--suave);
 }
-
-.entrar-caixa .entrada::placeholder {
-  color: #626262;
+.entrar-caixinha:hover {
+  border-color: rgba(255, 255, 255, 0.16);
 }
-
-.entrar-caixa .entrada:hover {
-  border-color: rgba(255, 255, 255, 0.14);
+.entrar-caixinha:focus-within {
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.06);
+  color: var(--texto);
 }
-
-.entrar-caixa .entrada:focus {
+.entrar-caixinha input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  background: none;
+  border: 0;
   outline: none;
-  background: rgba(255, 255, 255, 0.065);
-  border-color: rgba(255, 255, 255, 0.36);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.035);
+  color: #f4f4f4;
+  font: inherit;
+  font-size: 15px;
+  letter-spacing: 0.01em;
 }
-
-.entrar-caixa .entrada-icone button {
-  color: #858585;
-  transition:
-    color 200ms var(--suave),
-    transform 200ms var(--suave);
+.entrar-caixinha input::placeholder {
+  color: #5c5c5c;
 }
-
-.entrar-caixa .entrada-icone button:hover {
-  color: #fff;
-}
-
-/* Botão principal monocromático */
-
-.entrar-caixa .botao {
-  width: 100%;
-  height: 43px;
-  margin-top: 2px;
-  border-radius: 6px;
-  font-size: 11px;
+.entrar-ver {
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #cfcfcf;
+  font-size: 10px;
   font-weight: 500;
-  letter-spacing: 0.015em;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background 200ms var(--suave);
+}
+.entrar-ver:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
 
-.entrar-caixa .botao-destaque {
-  color: #101010;
-  background: #efefef;
-  border: 1px solid #efefef;
+/* linha com texto no meio */
+.entrar-divisa {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--texto-3);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.entrar-divisa::before,
+.entrar-divisa::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+.entrar-divisa span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entrar-erro {
+  padding: 9px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 163, 163, 0.15);
+  background: rgba(90, 35, 35, 0.25);
+  color: var(--bad);
+  font-size: 12px;
+}
+
+/* botão principal: branco */
+.entrar-botao {
+  height: 48px;
+  border-radius: 12px;
+  background: #f5f5f3;
+  border: 0;
+  color: #111;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   transition:
     background 250ms var(--suave),
-    border-color 250ms var(--suave),
     box-shadow 250ms var(--suave),
     transform 250ms var(--suave);
 }
-
-.entrar-caixa .botao-destaque:hover:not(:disabled) {
-  color: #080808;
+.entrar-botao:hover:not(:disabled) {
   background: #fff;
-  border-color: #fff;
-  box-shadow: 0 5px 24px rgba(255, 255, 255, 0.1);
-  filter: none;
+  box-shadow: 0 6px 28px rgba(255, 255, 255, 0.16);
 }
-
-.entrar-caixa .botao-destaque:active:not(:disabled) {
+.entrar-botao:active:not(:disabled) {
   transform: scale(0.985);
 }
+.entrar-botao:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
 
-/* Erros */
-
-.entrar-caixa .motivo {
-  padding: 10px 12px;
-  border: 1px solid rgba(255, 163, 163, 0.12);
-  border-radius: 6px;
-  background: rgba(90, 35, 35, 0.2);
-  color: #ffaaaa;
+/* perfis de teste: lista rótulo | valor */
+.entrar-perfis {
+  list-style: none;
+  margin-top: 4px;
+}
+.entrar-perfis button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 9px 8px;
+  border-radius: 8px;
+  background: none;
+  border: 0;
+  color: #bdbdbd;
+  font-size: 11px;
+  text-align: left;
+  transition:
+    background 200ms var(--suave),
+    color 200ms var(--suave);
+}
+.entrar-perfis li + li {
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+.entrar-perfis button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+.entrar-perfis button.ativo,
+.entrar-perfis button.ativo .entrar-perfil-email {
+  color: #fff;
+}
+.entrar-perfil-nome {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+.entrar-perfil-email {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--texto-2);
   font-size: 11px;
 }
 
-/* Demonstração */
-
-.entrar-demo {
-  display: grid;
-  gap: 11px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.entrar-demo .mini {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 5px;
-  color: #777;
-  font-size: 9px;
-  line-height: 1.7;
-}
-
-.entrar-demo .mini svg {
-  color: #999;
-  flex-shrink: 0;
-}
-
-.entrar-demo b {
-  color: #cfcfcf;
+/* "focus on void": canto inferior direito, com rastro de movimento.
+   O texto nítido fica no meio; duas cópias desfocadas se afastam para os lados
+   e convergem ao carregar, como uma lente entrando em foco. */
+.entrar-focus {
+  position: absolute;
+  right: clamp(16px, 4vw, 48px);
+  bottom: clamp(14px, 3.5vh, 36px);
+  margin: 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: clamp(13px, 1.1vw, 16px);
   font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  user-select: none;
+  pointer-events: none;
+}
+.entrar-focus span {
+  position: relative;
+  display: block;
+  animation: focus-nitido 1.6s var(--suave) 0.4s both;
+}
+.entrar-focus span::before,
+.entrar-focus span::after {
+  content: attr(data-t);
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  filter: blur(3px);
+  opacity: 0.55;
+}
+.entrar-focus span::before {
+  translate: -0.35em 0;
+  animation: focus-esq 1.6s var(--suave) 0.4s both;
+}
+.entrar-focus span::after {
+  translate: 0.35em 0;
+  animation: focus-dir 1.6s var(--suave) 0.4s both;
+}
+@keyframes focus-nitido {
+  from {
+    filter: blur(10px);
+    opacity: 0;
+  }
+}
+@keyframes focus-esq {
+  from {
+    translate: -1.6em 0;
+    filter: blur(12px);
+    opacity: 0;
+  }
+}
+@keyframes focus-dir {
+  from {
+    translate: 1.6em 0;
+    filter: blur(12px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brilho i,
+  .entrar-focus span,
+  .entrar-focus span::before,
+  .entrar-focus span::after {
+    animation: none;
+  }
 }
 
-.entrar-perfis {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 7px;
-}
-
-.perfil {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  min-height: 32px;
-  padding: 4px 10px 4px 5px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.035);
-  color: #aaa;
-  font-size: 10px;
-  transition:
-    background 250ms var(--suave),
-    border-color 250ms var(--suave),
-    color 250ms var(--suave),
-    transform 250ms var(--suave);
-}
-
-.perfil:hover {
-  color: #fff;
-  background: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.18);
-  transform: translateY(-2px);
-}
-
-.perfil.ativo {
-  color: #fff;
-  border-color: rgba(255, 255, 255, 0.4);
-  background: rgba(255, 255, 255, 0.075);
-}
-
-/* Portal em acabamento monocromático */
-
-.app.portal::after {
-  border-color: rgba(255, 255, 255, 0.8);
+/* celular */
+@media (max-width: 700px) {
+  .entrar-topo {
+    padding: 16px;
+  }
+  .entrar-palco {
+    height: min(600px, calc(100dvh - 150px));
+  }
+  .entrar-caixinha input {
+    font-size: 16px; /* sem zoom no iOS */
+  }
+  .entrar-focus {
+    font-size: 13px;
+  }
 }
 
 /* 9. Responsivo ------------------------------------------------------------ */
@@ -2014,44 +2269,13 @@ select.entrada {
   .relogio strong {
     font-size: 18px;
   }
+  .app-tela {
+    padding-top: 14px;
+  }
   .cabecalho {
-    padding: 2px 0 6px;
-  }
-  .topo {
-    padding-top: 6px;
-    padding-bottom: 2px;
+    padding-bottom: 12px;
   }
 
-  .entrar-topo {
-    padding-top: 17px;
-    padding-bottom: 17px;
-  }
-
-  .entrar-corpo {
-    padding-top: 18px;
-    padding-bottom: 22px;
-  }
-
-  .entrar-texto h1 {
-    font-size: clamp(36px, 4vw, 54px);
-  }
-
-  .entrar-texto p {
-    margin-top: 17px;
-  }
-
-  .entrar-caixa {
-    gap: 13px;
-    padding: 22px;
-  }
-
-  .entrar-caixa .entrada {
-    height: 39px;
-  }
-
-  .entrar-caixa .botao {
-    height: 39px;
-  }
 }
 
 /* notebook: Início em 3 colunas */
@@ -2082,7 +2306,9 @@ select.entrada {
     z-index: 40;
     display: none;
     padding: 16px;
+    border: 0;
     border-radius: 0;
+    background: var(--fundo);
     animation: subir var(--t-lento) var(--suave);
   }
   .detalhe.aberto {
@@ -2092,46 +2318,6 @@ select.entrada {
     display: inline-flex;
   }
 
-  .entrar-topo {
-    padding-inline: clamp(24px, 5vw, 60px);
-  }
-
-  .entrar-corpo {
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: auto auto;
-    align-content: center;
-    justify-items: center;
-    gap: 26px;
-    padding: 28px clamp(24px, 8vw, 90px) 38px;
-  }
-
-  .entrar-texto {
-    width: 100%;
-    max-width: 560px;
-    text-align: center;
-  }
-
-  .entrar-texto::before {
-    margin-bottom: 14px;
-  }
-
-  .entrar-texto h1 {
-    font-size: clamp(36px, 5.5vw, 56px);
-  }
-
-  .entrar-texto p {
-    max-width: 440px;
-    margin: 13px auto 0;
-    font-size: 12px;
-  }
-
-  .entrar-caixa {
-    width: min(440px, 100%);
-  }
-
-  .entrar-lados {
-    display: none;
-  }
 }
 
 /* abaixo de 900px o Início rola por dentro do painel */
@@ -2166,28 +2352,105 @@ select.entrada {
     grid-row: 2;
   }
 
-  .entrar-corpo {
-    gap: 20px;
-    padding-inline: 24px;
-  }
 }
 
-/* celular */
+/* celular: sem moldura, topo enxuto (logo | busca + avatar em botões redondos),
+   título grande, cards bem arredondados e menu flutuante embaixo */
 
 @media (max-width: 700px) {
+  :root {
+    --raio: 18px;
+    --raio-sm: 10px;
+    --espaco: 10px;
+  }
+  .app {
+    height: 100dvh;
+    padding: 0;
+    background: var(--fundo);
+  }
+  .app-corpo {
+    border: 0;
+    border-radius: 0;
+  }
+
+  /* topo */
+  .topo {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 8px;
+    min-height: 0;
+    padding: calc(12px + env(safe-area-inset-top)) 16px 4px;
+    border-bottom: 0;
+  }
+  .topo-logo {
+    display: block;
+    width: 28px;
+  }
+  .topo-busca-botao {
+    display: grid;
+    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+  }
+  .topo .busca {
+    display: none;
+  }
+  .topo.buscando {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .topo.buscando .topo-logo,
+  .topo.buscando .topo-sino,
+  .topo.buscando .topo-menu {
+    display: none;
+  }
+  .topo.buscando .busca {
+    display: block;
+    animation: aparecer var(--t-medio) ease-out;
+  }
+  .topo.buscando .busca .entrada {
+    height: 38px;
+    border-radius: 99px;
+  }
+  .topo-direita {
+    grid-column: 3;
+  }
+  .topo.buscando .topo-direita {
+    grid-column: 2;
+  }
+  .topo-sino {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+  }
+  .topo-usuario {
+    padding: 0;
+    border-radius: 50%;
+  }
+  .topo-usuario:hover {
+    background: none;
+    border-color: transparent;
+  }
+  .topo-usuario .avatar {
+    width: 38px !important;
+    height: 38px !important;
+  }
+
+  /* menu flutuante embaixo */
   .lateral {
     position: fixed;
     z-index: 30;
     left: 50%;
-    bottom: calc(12px + env(safe-area-inset-bottom));
+    bottom: calc(14px + env(safe-area-inset-bottom));
     width: auto;
     padding: 0;
     transform: translateX(-50%);
   }
   .lateral-card {
-    width: auto;
-    padding: 6px 8px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    padding: 6px;
+    background: rgba(17, 17, 17, 0.92);
+    border: 1px solid var(--borda-forte);
+    border-radius: 99px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
   }
   .lateral-logo,
   .lateral-sair,
@@ -2196,164 +2459,112 @@ select.entrada {
     display: none;
   }
   .lateral-nav {
+    --passo: 48px;
     flex-direction: row;
+    gap: 4px;
+  }
+  .lateral-item {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
   }
   .lateral-indicador {
-    left: 8px;
-    top: auto;
-    bottom: -6px;
-    width: 20px;
-    height: 3px;
-    border-radius: 3px 3px 0 0;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--card-3);
     transform: translateX(calc(var(--i) * var(--passo)));
   }
-  .topo {
-    gap: 8px;
-    padding: 12px 16px 8px;
-  }
+
+  /* conteúdo */
   .app-tela {
-    padding: 0 12px 80px;
+    padding: 8px 16px 88px;
   }
   .aviso {
-    margin: 0 12px 8px;
+    margin: 8px 16px 0;
+  }
+  .cabecalho {
+    gap: 12px;
+    padding-bottom: 14px;
+  }
+  .cabecalho-titulo h1 {
+    font-size: 24px;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+  .cabecalho-titulo .mini {
+    font-size: 12px;
+  }
+  .cabecalho .botao:not(.botao-icone) {
+    height: 38px;
+    padding: 0 14px;
+    border-radius: 99px;
+  }
+  .pilulas {
+    border-radius: 99px;
+  }
+  .pilula {
+    border-radius: 99px;
+  }
+  .card {
+    padding: 14px;
   }
   .painel {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: 240px 270px 280px auto 380px 280px 360px;
+    grid-template-rows: 220px 260px 280px auto 380px 280px 340px;
     grid-template-areas: "foto" "rastreio" "formato" "lateral" "agenda" "atividade" "lista";
   }
+  .banner {
+    min-height: 120px;
+  }
+
+  /* tabela compacta: só as colunas essenciais, linhas mais altas para o dedo */
   .tabela .some-celular {
     display: none;
   }
-  .tabela td,
   .tabela th {
-    padding-left: 6px;
-    padding-right: 6px;
+    padding: 10px 14px;
   }
+  .tabela td {
+    padding: 13px 14px;
+  }
+  .tabela td:last-child,
+  .tabela th:last-child {
+    text-align: right;
+  }
+
   .formulario-2 {
     grid-template-columns: 1fr;
   }
-
-  .entrar-topo {
-    padding: 19px 20px;
+  .detalhe {
+    padding: calc(14px + env(safe-area-inset-top)) 16px 24px;
   }
-
-  .logotipo {
-    font-size: 15px;
-    letter-spacing: 0.42em;
+  .detalhe .botao,
+  .modal .botao {
+    height: 42px;
+    border-radius: 99px;
   }
-
-  .entrar-topo .espacado {
-    font-size: 8px;
+  .detalhe .fechar-detalhe,
+  .modal .botao-icone {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
   }
-
-  .entrar-corpo {
-    align-content: center;
-    gap: clamp(14px, 3vh, 24px);
-    padding: 22px 18px 22px;
+  .entrada {
+    height: 42px;
+    font-size: 16px; /* evita o zoom automático do iOS */
   }
-
-  .entrar-texto {
-    text-align: left;
+  .fundo-modal {
+    place-items: end center;
+    padding: 0;
   }
-
-  .entrar-texto::before {
-    margin-bottom: 12px;
-    font-size: 8px;
-  }
-
-  .entrar-texto h1 {
-    font-size: clamp(31px, 8vw, 43px);
-    line-height: 1.06;
-    letter-spacing: -0.055em;
-  }
-
-  .entrar-texto p {
-    max-width: 390px;
-    margin: 11px 0 0;
-    font-size: 11px;
-    line-height: 1.65;
-  }
-
-  .entrar-caixa {
+  .modal {
     width: 100%;
-    max-width: 440px;
-    max-height: 48dvh;
-    gap: 12px;
-    padding: 19px;
-    border-radius: 9px;
+    max-height: 92dvh;
+    border-radius: 22px 22px 0 0;
+    padding-bottom: calc(18px + env(safe-area-inset-bottom));
+    animation: subir var(--t-lento) var(--suave);
   }
 
-  .entrar-caixa h2 {
-    font-size: 16px;
-  }
-
-  .entrar-caixa > div:first-child .mini {
-    font-size: 10px;
-  }
-
-  .entrar-caixa .entrada {
-    height: 40px;
-    font-size: 11px;
-  }
-
-  .entrar-caixa .botao {
-    height: 40px;
-  }
-
-  .entrar-demo {
-    gap: 8px;
-    padding-top: 11px;
-  }
-
-  .entrar-demo .mini {
-    font-size: 9px;
-  }
-
-  .perfil {
-    min-height: 30px;
-    font-size: 9px;
-  }
-
-  .fundo-estelar {
-    opacity: 0.45;
-  }
 }
 
-/* Telas de celular mais baixas */
-
-@media (max-width: 700px) and (max-height: 720px) {
-  .entrar-topo {
-    padding-top: 13px;
-    padding-bottom: 13px;
-  }
-
-  .entrar-corpo {
-    gap: 12px;
-    padding-top: 12px;
-    padding-bottom: 12px;
-  }
-
-  .entrar-texto::before {
-    margin-bottom: 8px;
-  }
-
-  .entrar-texto h1 {
-    font-size: clamp(27px, 6vw, 35px);
-  }
-
-  .entrar-texto p {
-    margin-top: 7px;
-    font-size: 10px;
-  }
-
-  .entrar-caixa {
-    max-height: 52dvh;
-    gap: 9px;
-    padding: 15px;
-  }
-
-  .entrar-demo {
-    padding-top: 8px;
-  }
-}

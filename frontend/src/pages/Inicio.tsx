@@ -1,10 +1,11 @@
 /**
  * Tela Início — painel da operação.
  * Os cards da esquerda mostram o motorista escolhido na faixa do cabeçalho;
- * Atividade, Entregas da semana e Motoristas mostram a frota toda.
+ * Atividade, Canhotos enviados e Motoristas mostram a frota toda.
  */
 import { useEffect, useMemo, useRef, useState } from "react";
 import logoV from "../assets/void-v.png";
+import { FluidoCard } from "../components/FluidoCard";
 import { Icone } from "../components/Icone";
 import { NovaNota } from "../components/NovaNota";
 import { Anel, Avatar, Botao, Cabecalho, Card, FotoMotorista, GraficoAneis, Vazio, useAgora } from "../components/ui";
@@ -39,7 +40,7 @@ export default function Inicio({ eu }: { eu: Usuario }) {
           <div className="area-formato"><CartaoGraficos m={sel} notas={notas} /></div>
           <div className="area-atividade"><CartaoAtividade notas={notas} /></div>
           <div className="area-lateral"><ColunaNumeros m={sel} notas={notas} eu={eu} /></div>
-          <div className="area-agenda"><CartaoAgenda notas={notas} usuarios={usuarios} /></div>
+          <div className="area-agenda"><CartaoAgenda notas={notas} /></div>
           <div className="area-lista"><CartaoMotoristas motoristas={motoristas} notas={notas} selId={sel.id} aoEscolher={setSelId} /></div>
         </div>
       )}
@@ -181,6 +182,7 @@ function ColunaNumeros({ m, notas, eu }: { m: Usuario; notas: NotaFiscal[]; eu: 
         <span className="mini">Valor em aberto</span>
       </Card>
       <button className="card card-destaque banner" onClick={() => irPara("canhotos", confere ? { status: "enviado" } : {})}>
+        <FluidoCard logo={false} className="banner-fluido" />
         <div className="banner-topo">
           <img src={logoV} alt="" />
           <span>{confere ? `${aConferir} a conferir` : "Abrir"} <Icone nome="seta" tamanho={12} /></span>
@@ -239,75 +241,139 @@ function CartaoAtividade({ notas }: { notas: NotaFiscal[] }) {
   );
 }
 
-/* ---------- Entregas da semana: canhotos enviados no dia, por horário ---------- */
-const HORA_INICIO = 7, HORA_FIM = 19, ALTURA_HORA = 46, ALTURA_EVENTO = 40, COLUNAS = 3;
+/* ---------- Entregas: gráfico de área suave (canhotos enviados x conferidos por dia) ---------- */
+const PERIODOS = [
+  { rotulo: "3 meses", dias: 90 },
+  { rotulo: "30 dias", dias: 30 },
+  { rotulo: "7 dias", dias: 7 },
+] as const;
+const MARGEM = { topo: 14, base: 22 };
 
-function CartaoAgenda({ notas, usuarios }: { notas: NotaFiscal[]; usuarios: Usuario[] }) {
-  const hoje = new Date();
-  const [semana, setSemana] = useState(0);           // 0 = esta semana, -1 = anterior...
-  const [diaSel, setDiaSel] = useState(hoje.getDay());
-  const corpo = useRef<HTMLDivElement>(null);
-  const domingo = inicioDoDia(hoje) - hoje.getDay() * DIA_MS + semana * 7 * DIA_MS;
-  const dias = Array.from({ length: 7 }, (_, i) => new Date(domingo + i * DIA_MS));
-  const diaMs = dias[diaSel].getTime();
+/** Curva suave (Catmull-Rom → Bézier) por todos os pontos, sem estourar o mínimo/máximo vizinho. */
+function curva(pts: [number, number][]) {
+  if (pts.length < 2) return "";
+  let d = `M${pts[0][0]},${pts[0][1]}`;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1] ?? pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] ?? p2;
+    const lo = Math.min(p1[1], p2[1]), hi = Math.max(p1[1], p2[1]);
+    const c1y = Math.min(hi, Math.max(lo, p1[1] + (p2[1] - p0[1]) / 6));
+    const c2y = Math.min(hi, Math.max(lo, p2[1] - (p3[1] - p1[1]) / 6));
+    d += `C${p1[0] + (p2[0] - p0[0]) / 6},${c1y} ${p2[0] - (p3[0] - p1[0]) / 6},${c2y} ${p2[0]},${p2[1]}`;
+  }
+  return d;
+}
 
-  // posiciona cada envio na sua hora, em até 3 colunas para não sobrepor
-  const eventos = useMemo(() => {
-    const livreAte = Array(COLUNAS).fill(-Infinity);
-    return notas
-      .filter((n) => n.canhoto && inicioDoDia(new Date(n.canhoto.enviadoEm)) === diaMs)
-      .sort((a, b) => a.canhoto!.enviadoEm.localeCompare(b.canhoto!.enviadoEm))
-      .map((n) => {
-        const d = new Date(n.canhoto!.enviadoEm);
-        const horas = Math.min(Math.max(d.getHours() + d.getMinutes() / 60, HORA_INICIO), HORA_FIM - 0.9);
-        const topo = (horas - HORA_INICIO) * ALTURA_HORA;
-        let coluna = livreAte.findIndex((f) => f <= topo);
-        if (coluna === -1) coluna = livreAte.indexOf(Math.min(...livreAte));
-        livreAte[coluna] = topo + ALTURA_EVENTO + 4;
-        return { n, topo, coluna };
-      });
-  }, [notas, diaMs]);
+/** Média ponderada gaussiana: tira os "dentes" da contagem diária e deixa só a tendência. */
+function suavizar(serie: number[], sigma: number) {
+  const raio = Math.ceil(sigma * 3);
+  return serie.map((_, i) => {
+    let soma = 0, peso = 0;
+    for (let k = -raio; k <= raio; k++) {
+      const j = Math.min(serie.length - 1, Math.max(0, i + k)); // borda repete o último valor
+      const p = Math.exp(-(k * k) / (2 * sigma * sigma));
+      soma += serie[j] * p; peso += p;
+    }
+    return soma / peso;
+  });
+}
 
-  // rola até o primeiro envio do dia
+function CartaoAgenda({ notas }: { notas: NotaFiscal[] }) {
+  const [periodo, setPeriodo] = useState<number>(PERIODOS[1].dias);
+  const [hover, setHover] = useState<number | null>(null);
+  const [tam, setTam] = useState({ w: 0, h: 0 });
+  const area = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    corpo.current?.scrollTo({ top: eventos.length ? Math.max(0, eventos[0].topo - 20) : ALTURA_HORA, behavior: "smooth" });
-  }, [eventos]);
+    const el = area.current!;
+    const ro = new ResizeObserver(() => setTam({ w: el.clientWidth, h: el.clientHeight }));
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
-  const nomeDe = (id: string) => usuarios.find((u) => u.id === id)?.nome ?? "?";
-  const agoraTopo = diaMs === inicioDoDia(hoje) ? (hoje.getHours() + hoje.getMinutes() / 60 - HORA_INICIO) * ALTURA_HORA : -1;
+  const hoje = inicioDoDia(new Date());
+  const { dias, enviados, conferidos, total } = useMemo(() => {
+    const dias = Array.from({ length: periodo }, (_, i) => new Date(hoje - (periodo - 1 - i) * DIA_MS));
+    const enviados = dias.map(() => 0), conferidos = dias.map(() => 0);
+    let total = 0;
+    for (const n of notas) {
+      if (!n.canhoto) continue;
+      const col = periodo - 1 - Math.round((hoje - inicioDoDia(new Date(n.canhoto.enviadoEm))) / DIA_MS);
+      if (col < 0 || col >= periodo) continue;
+      enviados[col]++; total++;
+      if (n.status === "conferido") conferidos[col]++;
+    }
+    return { dias, enviados, conferidos, total };
+  }, [notas, periodo, hoje]);
+
+  const { w, h } = tam;
+  const alto = Math.max(1, h - MARGEM.topo - MARGEM.base);
+  const sigma = Math.max(1, periodo / 22);
+  const sA = useMemo(() => suavizar(enviados, sigma), [enviados, sigma]);
+  const sB = useMemo(() => suavizar(conferidos, sigma), [conferidos, sigma]);
+  const max = Math.max(2, ...sA) * 1.3;
+  const x = (i: number) => (periodo === 1 ? 0 : (i / (periodo - 1)) * w);
+  const y = (v: number) => MARGEM.topo + alto - (v / max) * alto;
+  const pontos = (serie: number[]) => serie.map((v, i) => [x(i), y(v)] as [number, number]);
+  const base = MARGEM.topo + alto;
+  const linhaA = curva(pontos(sA)), linhaB = curva(pontos(sB));
+  const fecha = (l: string) => `${l}L${w},${base}L0,${base}Z`;
+
+  const fmtData = (d: Date, longa = false) =>
+    d.toLocaleDateString("pt-BR", longa ? { day: "2-digit", month: "short", year: "numeric" } : { day: "2-digit", month: "short" }).replace(".", "");
+  const nTicks = Math.min(6, periodo);
+  const ticks = Array.from({ length: nTicks }, (_, i) => Math.round((i / (nTicks - 1)) * (periodo - 1)));
+
+  function mover(e: React.PointerEvent) {
+    const r = area.current!.getBoundingClientRect();
+    setHover(Math.min(periodo - 1, Math.max(0, Math.round(((e.clientX - r.left) / r.width) * (periodo - 1)))));
+  }
 
   return (
-    <Card titulo={<>Entregas da semana <span className="contador">{plural(eventos.length, "canhoto")}</span></>}
-      acao={<>
-        <Botao icone="esquerda" aria-label="Semana anterior" onClick={() => setSemana(semana - 1)} />
-        <Botao icone="direita" aria-label="Próxima semana" disabled={semana >= 0} onClick={() => setSemana(semana + 1)} />
-      </>}>
-      <div className="agenda-dias pilulas">
-        {dias.map((d, i) => (
-          <button key={i} className={`pilula ${i === diaSel ? "ativa" : ""}`} onClick={() => setDiaSel(i)}>
-            {diaSemana(d)} <small>{d.getDate()}</small>
-          </button>
-        ))}
-      </div>
-      {eventos.length === 0 && <p className="mini agenda-aviso">Nenhum canhoto enviado neste dia.</p>}
-      <div className="agenda-corpo" ref={corpo}>
-        {Array.from({ length: HORA_FIM - HORA_INICIO + 1 }, (_, i) => (
-          <div key={i} className="agenda-hora"><span>{String(HORA_INICIO + i).padStart(2, "0")}:00</span></div>
-        ))}
-        <div className="agenda-eventos">
-          {agoraTopo > 0 && <div className="agenda-agora" style={{ top: agoraTopo }} />}
-          {eventos.map(({ n, topo, coluna }) => (
-            <button key={n.id} className={`evento ${n.status === "enviado" ? "card-destaque" : ""}`}
-              style={{ top: topo, left: `${coluna * 34}%` }} title={`NF ${n.numero} · ${n.cliente}`}
-              onClick={() => irPara("canhotos", { nf: n.id })}>
-              <div>
-                <strong>NF {n.numero}</strong>
-                <small className="corta">{n.cliente}</small>
-              </div>
-              <Avatar nome={nomeDe(n.canhoto!.enviadoPor)} tamanho={20} />
-            </button>
+    <Card className="envios"
+      titulo={<span className="envios-titulo"><b>Canhotos enviados</b><small>{plural(total, "envio")} nos últimos {PERIODOS.find((p) => p.dias === periodo)!.rotulo}</small></span>}
+      acao={
+        <div className="envios-periodos" role="group" aria-label="Período">
+          {PERIODOS.map((p) => (
+            <button key={p.dias} aria-pressed={p.dias === periodo} onClick={() => { setPeriodo(p.dias); setHover(null); }}>{p.rotulo}</button>
           ))}
         </div>
+      }>
+      <div className="envios-area" ref={area} onPointerMove={mover} onPointerLeave={() => setHover(null)}>
+        {w > 0 && h > 0 && (
+          <svg width={w} height={h} role="img" aria-label="Canhotos enviados e conferidos por dia">
+            <defs>
+              <linearGradient id="env-a" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#f5f5f3" stopOpacity="0.5" /><stop offset="1" stopColor="#f5f5f3" stopOpacity="0.02" />
+              </linearGradient>
+              <linearGradient id="env-b" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stopColor="#9a9a9a" stopOpacity="0.55" /><stop offset="1" stopColor="#9a9a9a" stopOpacity="0.02" />
+              </linearGradient>
+            </defs>
+            {[0.25, 0.5, 0.75].map((f) => <line key={f} x1="0" x2={w} y1={MARGEM.topo + alto * f} y2={MARGEM.topo + alto * f} className="envios-grade" />)}
+            <path d={fecha(linhaA)} fill="url(#env-a)" />
+            <path d={linhaA} className="envios-linha" stroke="#f5f5f3" />
+            <path d={fecha(linhaB)} fill="url(#env-b)" />
+            <path d={linhaB} className="envios-linha" stroke="#9a9a9a" />
+            {ticks.map((i, k) => (
+              <text key={i} x={Math.min(w - 2, Math.max(2, x(i)))} y={h - 5} className="envios-rotulo"
+                textAnchor={k === 0 ? "start" : k === ticks.length - 1 ? "end" : "middle"}>{fmtData(dias[i])}</text>
+            ))}
+            {hover !== null && (
+              <g>
+                <line x1={x(hover)} x2={x(hover)} y1={MARGEM.topo} y2={base} className="envios-guia" />
+                <circle cx={x(hover)} cy={y(sA[hover])} r="3.5" fill="#f5f5f3" />
+                <circle cx={x(hover)} cy={y(sB[hover])} r="3.5" fill="#9a9a9a" />
+              </g>
+            )}
+          </svg>
+        )}
+        {hover !== null && w > 0 && (
+          <div className="envios-dica" style={{ left: x(hover), top: Math.max(4, y(sA[hover]) - 70), transform: `translateX(${x(hover) > w * 0.7 ? "calc(-100% - 12px)" : "12px"})` }}>
+            <strong>{fmtData(dias[hover], true)}</strong>
+            <span><i style={{ background: "#f5f5f3" }} />Enviados <b>{enviados[hover]}</b></span>
+            <span><i style={{ background: "#9a9a9a" }} />Conferidos <b>{conferidos[hover]}</b></span>
+          </div>
+        )}
       </div>
     </Card>
   );

@@ -31,76 +31,79 @@ conteúdo". Se uma lista pode crescer sem limite, ela entra num card com `.rolag
 
 ## 2. Cor
 
-Paleta propositalmente enxuta: **fundos em preto/cinza neutro** + **um único par
-de destaque em menta/ciano**, sem cores adicionais exceto para status.
+Paleta propositalmente enxuta: **só preto, cinza e branco** (como as referências
+em desfoque e grão). Sem cor de destaque. O app ocupa a tela inteira: um trilho preto
+de ícones à esquerda (círculos; o ativo ganha uma bolha cinza que desliza) e o
+painel de conteúdo "dentro" dele, com cantos de 24px. Sem borda em volta da página.
 
 ```css
-/* fundos — do mais escuro ao mais claro */
---fundo:  #0f0f0f;   /* fundo do app atrás de tudo */
---card:   #141414;   /* superfície padrão: cards, menu, inputs de busca */
---card-2: #222222;   /* superfície elevada: hover de linha, badges, inputs */
---card-3: #2e2e2e;   /* elementos de UI pequenos: scrollbar, trilho do switch */
+/* paleta de referência: Obsidian #0A0A0A, Graphite #171717, Charcoal #222,
+   Deep Gray #2E2E2E, Slate #555, Cool Gray #858585, Light Gray #B5B5B5,
+   Mist #D9D9D7, Off White #EDEDEB, Soft White #F5F5F3, Pure White #FFF */
+--pagina: #0a0a0a;   /* obsidian: o chrome preto em volta do painel */
+--fundo:  #121212;   /* painel de conteúdo (arredondado, dentro do trilho preto) */
+--card:   #171717;   /* graphite: cards, tabelas, menu */
+--cabeca: #1b1b1b;   /* cabeçalho de tabela, rótulos da lista de dados */
+--card-2: #222;      /* charcoal: hover, badges, botão padrão */
+--card-3: #2e2e2e;   /* deep gray: item ativo, pílula ativa, scrollbar */
 
-/* linhas e bordas — sempre brancas translúcidas, nunca cor sólida */
---linha: rgba(255,255,255,.07);
---borda: rgba(255,255,255,.05);
+/* linhas e bordas — sempre brancas translúcidas */
+--linha / --borda: rgba(255,255,255,.075);
+--borda-forte:     rgba(255,255,255,.13);  /* inputs, botão contorno */
 
-/* texto — três níveis de ênfase */
---texto:   #ffffff;  /* títulos, valores, texto principal */
---texto-2: #9a9a9a;  /* legendas, labels, texto secundário */
---texto-3: #5f5f5f;  /* o mais apagado: placeholders visuais, ícones inativos */
+/* texto */
+--texto: #f5f5f3;  --texto-2: #858585;  --texto-3: #555;
 
-/* destaque — a ÚNICA cor viva do sistema */
---destaque:   #d7fefa;  /* menta — ação primária, progresso concluído */
---destaque-2: #8fdce8;  /* ciano — ação secundária, segundo nível de dado */
---sobre-destaque:   #1a1d1d;  /* texto escuro em cima de uma superfície --destaque */
---sobre-destaque-2: #4a5555;  /* texto secundário em cima de --destaque */
+/* ação primária — branco */
+--primario: #f5f5f3;  --sobre-primario: #0b0b0b;
 
-/* status (mapeados 1:1 com o fluxo de canhotos em lib/util.ts) */
---ok:   var(--destaque);    /* conferido */
---info: var(--destaque-2);  /* a conferir */
---warn: #f3d9a4;             /* pendente / atrasado */
---bad:  #ffa3a3;             /* recusado / erro */
---bad-fundo: #3a2a2a;        /* fundo de avisos e mensagens de erro */
+/* destaques — em tons de cinza/branco */
+--destaque:   #f5f5f3;  /* soft white */
+--destaque-2: #b5b5b5;  /* light gray */
+--destaque-suave: rgba(255,255,255,.14), para bordas de destaque
+--degrade: radial cinza, de quase branco a preto, subindo de baixo
+
+/* status (lib/util.ts) */
+--ok: var(--destaque); --info: var(--destaque-2); --warn: #f3d9a4; --bad: #ffa3a3;
 ```
 
 **Regras de uso:**
-- `--destaque` é reservado para a ação mais importante da tela — um botão
-  principal, o item ativo de um filtro, a fatia "concluído" de um gráfico. Usar
-  em mais de um lugar por tela dilui o efeito.
-- Nunca usar cor sólida nas bordas — sempre branco translúcido (`--linha` ou
-  `--borda`), o que deixa o contraste suave em qualquer fundo escuro.
-- Elementos "em cima do destaque" (texto dentro de um card `.card-destaque`,
-  por exemplo) usam `--sobre-destaque`, nunca `--texto` branco — o menta claro
-  não tem contraste suficiente com branco.
-- **Exceção deliberada — escalas sequenciais (heatmaps):** quando o dado é uma
-  intensidade (0, 1, 2, 3+ ocorrências), usar `color-mix(in srgb, var(--destaque)
-  X%, var(--card-2))` em passos crescentes (ex.: 28%, 62%, 100%) em vez de
-  introduzir cinzas no meio da escala. É a mesma cor, só mais clara conforme o
-  valor cresce — não conta como "um segundo destaque" porque é uma única
-  variável semântica (quantidade), não duas ações competindo. Ver `.grade-celula`
-  na grade de Atividade (Início).
+- Botão principal é **branco** (`.botao-destaque` usa `--primario`).
+- O destaque (branco) aparece **pequeno**: foco de input, traço do item ativo (menu
+  lateral, linha selecionada da tabela, evento a conferir), contagem da pílula
+  ativa, números-chave (relógio), switch ligado, marcadores de status e gráficos.
+  Nunca como fundo de card.
+- `--degrade` (com grão fino por cima) só em **um ponto focal por tela** — hoje,
+  o banner "Conferir canhotos" do Início.
+- Estado ativo = cinza mais claro + borda (`--card-2`/`--card-3`), não cor.
+- `.card-destaque` é cinza elevado; o destaque vem de uma borda/traço branco.
+- Tabelas encostam na borda do card (`.card:has(> .rolagem > .tabela)`),
+  cabeçalho em `--cabeca`, linhas separadas por `--linha`, sem caixa alta.
+- **Escalas sequenciais (heatmaps):** `color-mix(in srgb, var(--destaque) X%,
+  var(--card-2))` em passos (28%, 62%, 100%). Ver `.grade-celula`.
+- **Celular (≤700px):** topo com logo + botões redondos (busca
+  recolhida, sino, avatar); títulos de 24px; pílulas e botões arredondados;
+  menu flutuante embaixo; modais abrem como folha de baixo.
 
 ---
 
 ## 3. Tipografia
 
-Uma família só: **Poppins** (pesos 300–600), carregada do Google Fonts no
+Uma família só: **Inter** (pesos 300–600), carregada do Google Fonts no
 `index.html`. Fallback: `system-ui, sans-serif`.
 
 | Peso | Uso |
 |---|---|
-| 300 | títulos grandes (hero da tela Entrar, números grandes) |
-| 400 | corpo de texto, título de card, título de tela |
-| 500 | texto com ênfase: nomes, valores, labels de botão |
+| 300 | títulos grandes (hero da tela Entrar) |
+| 400 | corpo de texto, títulos de tela, números grandes |
+| 500 | título de card, nomes, valores, labels de botão |
 | 600 | a palavra de destaque dentro de um título (`<b>` dentro de `<h1>`) |
 
-Base do corpo: `12px`, `line-height: 1.45`. Escala bem pequena e discreta —
-a maior parte da interface usa entre `10px` e `14px`; só títulos de tela (hero
-do login, números em destaque) passam de `20px`.
+Base do corpo: `13px`, `line-height: 1.45`. Tabela `12.5px`, títulos de card
+`13px`, título de tela `18px` (`24px` no celular).
 
 ```css
-.mini      { font-size: 10px; color: var(--texto-2); }  /* legenda padrão */
+.mini      { font-size: 11px; color: var(--texto-2); }  /* legenda padrão */
 .espacado  { font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--texto-2); }
 .num       { font-variant-numeric: tabular-nums; }       /* todo número/valor monetário usa isso */
 ```
@@ -172,12 +175,11 @@ CSS (sem CSS-in-JS, sem Tailwind). Os principais:
 ### Textura dither (a "assinatura pixel")
 Funções em [`src/components/Dither.tsx`](../src/components/Dither.tsx): cada célula
 de uma grade acende ou não comparando um brilho com uma matriz de Bayer 4×4 — o
-grão de halftone das referências. Usada **grande uma vez** (a lua do login) e
-**pequena em detalhes**: `<LuaPixel>` no estado vazio (`<Vazio>`) e `<BrilhoDither>`
-no fundo da foto do motorista. Nunca como textura de fundo de card ou tabela.
+grão de halftone das referências. Hoje só aparece **pequena**: `<LuaPixel>` no estado vazio (`<Vazio>`). Sem pontos
+em fundos de card, foto ou tela.
 No resto da interface a linguagem aparece só como forma: marcadores de status,
 legendas e a grade de atividade são quadrados (`border-radius: 1px`), sem glow.
-Sobre tudo há um grão de ruído muito leve (`body::before`, 4% em `overlay`).
+Sobre tudo há um grão de ruído muito leve (`body::before`, `overlay`); no login ele fica mais forte, sobre a luz desfocada.
 
 **Convenção de nomenclatura:** classes e nomes de variáveis em português, no
 estilo "o que é" (`.lateral-item`, `--sobre-destaque`), não abreviações em
@@ -200,36 +202,28 @@ e têm um micro-feedback de clique: `transform: scale(.98)` no `:active`.
 É a peça de identidade visual mais elaborada do sistema — vale documentar o
 mecanismo porque não é óbvio lendo o CSS isoladamente.
 
-O sistema inteiro tem **um fundo só**: `<FundoEstelar>` (`src/components/Fundo.tsx`),
-uma constelação em espiral com grãos de 2–4px encaixados numa grade de 4px (por isso
-"pixelizada"), mais algumas estrelas soltas. É um `<canvas>` fixo atrás de tudo,
-desenhado **uma única vez** (não por quadro: é por isso que é leve). Ele é montado
-no `App.tsx` no mesmo lugar da árvore tanto no login quanto no app, então não
-remonta ao entrar — só passa de `opacity .7` para `.3` (classe `.suave`). Por isso
-`.app` e `.entrar` não têm fundo sólido: a cor base fica no `body`.
-
-A posição do núcleo (`--px`/`--py`) é calculada por uma função pura,
-`pivo()` em `Fundo.tsx`, a partir só de `innerWidth`/`innerHeight` — sem medir
-nenhum elemento do DOM. O fundo, o pontinho do núcleo (`.poeira-ponto`, no login)
-e `abrirPortal()` chamam a mesma fórmula e chegam ao mesmo ponto.
+A tela de login é preto com **luz branca desfocada** (`.brilho`) e grão fino por
+cima, um card de vidro escuro e a frase **"focus on void"** no canto inferior
+direito (`.entrar-focus`): o texto nítido com duas cópias desfocadas que se afastam
+e convergem ao carregar, como uma lente entrando em foco. O app não tem fundo
+decorativo: não há moldura, constelação nem pontos.
 
 Ao autenticar com sucesso:
 1. **Saída do formulário** (420ms): texto e card de login se dissolvem com
    leve blur + descida (`login-sai`); o pontinho do núcleo cresce e ganha glow
    (`ponto-acende`) — o ponto que vai abrir o sistema. O fundo fica e só apaga.
 2. **Portal** (900ms, logo em seguida): o `<div class="app">` entra com um
-   `clip-path: circle()` animado a partir da posição exata do ponto
-   (variáveis `--ox`/`--oy`, calculadas por `pivo()` no momento do submit) —
-   o app "nasce" daquele ponto e se expande até cobrir a tela. Um anel ciano
+   `clip-path: circle()` animado a partir do centro da tela
+   (variáveis `--ox`/`--oy`, gravadas por `abrirPortal()` no submit) —
+   o app "nasce" dali e se expande até cobrir a tela. Um anel branco
    (`::after`) acompanha a borda dessa expansão.
 3. Só depois disso os cards da tela começam a entrar (`--atraso: 380ms` soma ao
    delay normal de `.entra`), para não competir visualmente com o portal.
 
 Reaproveite esse padrão (abrir um elemento "de um ponto") se precisar de outra
-transição com a mesma assinatura visual — a lógica de cálculo de origem está
-isolada em `pivo()`/`abrirPortal()` em `Entrar.tsx`. A deriva lenta do vórtice
-(`@keyframes deriva`, um `rotate()` de poucos graus em 50s) é a única animação
-contínua da tela — tudo o resto entra uma vez e para, por isso o efeito nunca
+transição com a mesma assinatura visual — a origem é definida em
+`abrirPortal()` em `Entrar.tsx`. A deriva lenta da luz (`@keyframes brilho-deriva`)
+é a única animação contínua da tela — tudo o resto entra uma vez e para, por isso o efeito nunca
 pesa na CPU/GPU mesmo ficando minutos parado na tela de login.
 
 ---

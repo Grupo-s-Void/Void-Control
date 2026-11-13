@@ -1,8 +1,7 @@
 /**
  * Textura dither (Bayer 4×4): cada célula acende ou não comparando o brilho com a
- * matriz — é o grão "halftone" da identidade. Usada grande no céu da tela Entrar e
- * pequena em detalhes do app (estado vazio, foto do motorista). Sempre desenhada
- * UMA VEZ num canvas, nunca por quadro.
+ * matriz. Hoje só aparece pequena no estado vazio (lua). Desenhada UMA VEZ num
+ * canvas, nunca por quadro.
  */
 import { useEffect, useRef } from "react";
 
@@ -71,40 +70,4 @@ export function LuaPixel({ tamanho = 44 }: { tamanho?: number }) {
   }, [tamanho]);
 
   return <canvas ref={ref} className="lua-pixel" style={{ width: tamanho, height: tamanho }} aria-hidden="true" />;
-}
-
-/** Brilho radial em dither que preenche o elemento pai (fundo da foto do motorista). */
-export function BrilhoDither({ cor }: { cor: string }) {
-  const ref = useRef<HTMLCanvasElement>(null);
-
-  useEffect(() => {
-    const canvas = ref.current!;
-    const ctx = canvas.getContext("2d")!;
-
-    function desenhar() {
-      const { width: w, height: h } = canvas.getBoundingClientRect();
-      if (!w || !h) return;
-      const dpr = Math.min(devicePixelRatio || 1, 2);
-      canvas.width = w * dpr; canvas.height = h * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, w, h);
-      ctx.fillStyle = cor;
-
-      const passo = 4, cx = w / 2, cy = h * 0.32, alcance = Math.max(w, h) * 0.62;
-      for (let lin = 0; lin * passo < h; lin++) {
-        for (let col = 0; col * passo < w; col++) {
-          const d = Math.hypot(col * passo - cx, lin * passo - cy) / alcance;
-          const b = Math.max(0, 1 - d) ** 1.8 * 0.7;
-          if (b > limiar(col, lin)) ctx.fillRect(col * passo, lin * passo, 2, 2);
-        }
-      }
-    }
-
-    desenhar();
-    const obs = new ResizeObserver(desenhar);
-    obs.observe(canvas);
-    return () => obs.disconnect();
-  }, [cor]);
-
-  return <canvas ref={ref} className="brilho-dither" aria-hidden="true" />;
 }
